@@ -11,3 +11,7 @@ node_modules
 .idea
 .vscode
 
+mnvw
+mvnw.cmd
+.mvn
+jwk.json
