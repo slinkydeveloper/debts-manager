@@ -1,0 +1,324 @@
+openapi: 3.0.1
+info:
+  title: 'Debts Manager API'
+  contact:
+    name: 'Francesco Guardiani'
+    url: 'https://slinkydeveloper.github.io'
+  license:
+    name: 'MIT License'
+    url: 'https://opensource.org/licenses/MIT'
+  version: 1.0.0
+paths:
+  /transactions:
+    summary: 'Path used to manage the list of Transactions.'
+    description: "The REST endpoint/path used to list and create zero or more `Transaction`\nentities.  This path contains a `GET` and `POST` operation to perform the list\nand create tasks, respectively."
+    get:
+      summary: 'List All Transactions'
+      description: "Gets a list of all `Transaction` entities where logged user is\ninvolved"
+      operationId: getTransactions
+      responses:
+        '200':
+          description: 'Successful response - returns an array of `Transaction` entities.'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          description: 'Expired token'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+    post:
+      summary: 'Create a Transaction'
+      description: 'Creates a new instance of a `Transaction`.'
+      operationId: createTransaction
+      requestBody:
+        description: 'A new `Transaction` to be created.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTransaction'
+        required: true
+      responses:
+        '201':
+          description: 'Successful response.'
+        '401':
+          description: 'Expired Token'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+  '/transactions/{transactionId}':
+    summary: 'Path used to manage a single Transaction.'
+    description: "The REST endpoint/path used to get, update, and delete single instances\nof an `Transaction`.  This path contains `GET`, `PUT`, and `DELETE` operations\nused to perform the get, update, and delete tasks, respectively."
+    get:
+      summary: 'Get a Transaction'
+      description: 'Gets the details of a single instance of a `Transaction`.'
+      operationId: getTransaction
+      responses:
+        '200':
+          description: 'Successful response - returns a single `Transaction`.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: 'Expired Token'
+        '403':
+          description: "Trying to get a transaction where `from` or `to` is not actual\nuser"
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+    put:
+      summary: 'Update a Transaction'
+      description: 'Updates an existing `Transaction`.'
+      operationId: updateTransaction
+      requestBody:
+        description: 'Updated `Transaction` information.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransaction'
+        required: true
+      responses:
+        '202':
+          description: 'Successful response.'
+        '401':
+          description: 'Expired Token'
+        '403':
+          description: 'Trying to update a transaction where `from` is not actual user'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+    delete:
+      summary: 'Delete a Transaction'
+      description: 'Deletes an existing `Transaction`.'
+      operationId: deleteTransaction
+      responses:
+        '204':
+          description: 'Successful response.'
+        '401':
+          description: 'Expired Token '
+        '403':
+          description: 'Trying to remove a transaction where `from` is not actual user'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+    parameters:
+      -
+        name: transactionId
+        in: path
+        description: 'A unique identifier for a `Transaction`.'
+        required: true
+        schema:
+          type: string
+  /status:
+    get:
+      summary: 'Get status of actual user'
+      operationId: getUserStatus
+      responses:
+        '200':
+          description: 'Status of logged user'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '401':
+          description: 'Expired token'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: transactions.debts_manager
+  /login:
+    post:
+      summary: Login
+      operationId: login
+      x-vertx-event-bus: users.debts_manager
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - username
+                - password
+              type: object
+              properties:
+                username:
+                  $ref: '#/components/schemas/Username'
+                password:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: 'Returns the JWT token'
+          content:
+            text/plain: {}
+        '400':
+          description: 'Wrong username or password'
+      security:
+        -
+          loggedUserToken: []
+  /register:
+    post:
+      summary: Register
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - username
+                - password
+              type: object
+              properties:
+                username:
+                  $ref: '#/components/schemas/Username'
+                password:
+                  type: string
+        required: true
+      responses:
+        '200':
+          description: 'Returns the JWT Token'
+          content:
+            text/plain:
+              x-description: 'Login token'
+      x-vertx-event-bus: users.debts_manager
+  /connectedUsers:
+    get:
+      summary: 'Get Connected Users List'
+      operationId: getConnectedUsers
+      responses:
+        '200':
+          description: 'All connected users'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  allowedTo:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Username'
+                  allowedFrom:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Username'
+        '401':
+          description: 'Expired token'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: users.debts_manager
+  /connectUser:
+    post:
+      summary: 'Connect user'
+      description: 'Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction'
+      operationId: connectUser
+      x-vertx-event-bus: users.debts_manager
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Username'
+        required: true
+      responses:
+        '200':
+          description: 'User connected'
+        '401':
+          description: 'Expired token'
+      security:
+        -
+          loggedUserToken: []
+  /users:
+    get:
+      summary: 'Get all users'
+      operationId: getUsers
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Username'
+        '401':
+          description: 'Expired token'
+      security:
+        -
+          loggedUserToken: []
+      x-vertx-event-bus: users.debts_manager
+components:
+  schemas:
+    Username:
+      minLength: 5
+      type: string
+    NewTransaction:
+      allOf:
+        -
+          required:
+            - from
+            - to
+            - description
+            - value
+          type: object
+        -
+          $ref: '#/components/schemas/UpdateTransaction'
+    UpdateTransaction:
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/Username'
+        to:
+          $ref: '#/components/schemas/Username'
+        value:
+          type: number
+        description:
+          minLength: 1
+          type: string
+    Transaction:
+      allOf:
+        -
+          $ref: '#/components/schemas/UpdateTransaction'
+        -
+          required:
+            - from
+            - to
+            - id
+            - description
+            - value
+            - at
+          type: object
+          properties:
+            id:
+              type: string
+            at:
+              format: date-time
+              type: string
+    Status:
+      required:
+        - transactions
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        users:
+          description: 'Map with users id as keys and debt as value'
+          additionalProperties:
+            type: number
+  securitySchemes:
+    loggedUserToken:
+      type: http
+      scheme: bearer
+  x-vertx-service-gen:
+    transactions.debts_manager: TransactionsService
+    users.debts_manager: UsersService
+    login.debts_manager: LoginService
