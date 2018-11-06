@@ -8,7 +8,7 @@ import java.util.List;
 public interface UserPersistence {
 
   Future<Void> addUser(AuthCredentials user);
-  Future<Void> userExists(AuthCredentials user);
+  Future<Boolean> userExists(AuthCredentials user);
   Future<List<String>> getUsersList();
   Future<Void> addUserConnection(String from, String to);
   Future<List<String>> getAllowedFrom(String username);

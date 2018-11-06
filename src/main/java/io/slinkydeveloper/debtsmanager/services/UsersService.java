@@ -1,13 +1,12 @@
 package io.slinkydeveloper.debtsmanager.services;
 
+import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.web.api.*;
 import io.vertx.ext.web.api.generator.WebApiServiceGen;
-
-import java.util.List;
-import java.util.Map;
 
 import io.slinkydeveloper.debtsmanager.models.*;
 import io.slinkydeveloper.debtsmanager.services.impl.UsersServiceImpl;
@@ -15,8 +14,8 @@ import io.slinkydeveloper.debtsmanager.services.impl.UsersServiceImpl;
 @WebApiServiceGen
 public interface UsersService {
 
-  static UsersService create(Vertx vertx) {
-    return new UsersServiceImpl(vertx);
+  static UsersService create(Vertx vertx, UserPersistence persistence, JWTAuth auth) {
+    return new UsersServiceImpl(vertx, persistence, auth);
   }
 
   void login(
@@ -32,5 +31,7 @@ public interface UsersService {
 
   void getUsers(
     OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
+
+  void connectUser(String body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 
 }

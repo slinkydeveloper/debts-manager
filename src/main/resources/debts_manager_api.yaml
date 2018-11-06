@@ -14,7 +14,7 @@ paths:
     description: "The REST endpoint/path used to list and create zero or more `Transaction`\nentities.  This path contains a `GET` and `POST` operation to perform the list\nand create tasks, respectively."
     get:
       summary: 'List All Transactions'
-      description: "Gets a list of all `Transaction` entities where logged user is\ninvolved"
+      description: "Gets a list of all `Transaction` entities where logged user is involved"
       operationId: getTransactions
       responses:
         '200':
@@ -218,7 +218,8 @@ paths:
   /connectUser:
     post:
       summary: 'Connect user'
-      description: 'Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction'
+      description: "Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction.
+                    If you want to send transactions from you to userX, userX must connect you calling this endpoint"
       operationId: connectUser
       x-vertx-event-bus: users.debts_manager
       requestBody:
