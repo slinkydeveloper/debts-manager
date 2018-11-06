@@ -12,6 +12,9 @@ import io.vertx.ext.web.api.*;
 import io.slinkydeveloper.debtsmanager.models.*;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 public class UsersServiceImpl implements UsersService {
@@ -28,6 +31,7 @@ public class UsersServiceImpl implements UsersService {
 
   @Override
   public void login(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
+    body.hashPassword();
     persistence.userExists(body).setHandler(ar -> {
       if (ar.succeeded()) {
         if (ar.result()) {
@@ -43,6 +47,7 @@ public class UsersServiceImpl implements UsersService {
 
   @Override
   public void register(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
+    body.hashPassword();
     persistence.addUser(body).setHandler(ar -> {
       if (ar.succeeded()) {
         resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
