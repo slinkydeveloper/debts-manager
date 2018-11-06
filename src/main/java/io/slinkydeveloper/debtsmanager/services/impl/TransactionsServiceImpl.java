@@ -64,19 +64,22 @@ public class TransactionsServiceImpl implements TransactionsService {
     String transactionId,
     UpdateTransaction body,
     OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
-    transactionPersistence.getTransaction(transactionId).setHandler(getAr -> {
-      if (getAr.failed()) resultHandler.handle(Future.failedFuture(getAr.cause()));
-      if (getAr.result() == null) resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(404).setStatusMessage("Not Found")));
-      if (!getAr.result().getFrom().equals(context.getUser().getString("username")))
-        resultHandler.handle(Future.succeededFuture(new OperationResponse()
-          .setStatusCode(403)
-          .setStatusMessage("Forbidden")
-          .setPayload(Buffer.buffer("You are not authorized to update " + transactionId + " because you are not the transaction creator"))));
-      transactionPersistence.updateTransaction(transactionId, body).setHandler(ar -> {
-        if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
-        resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
+    if (body.getDescription() == null && body.getValue() == null)
+      resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Bad Request")));
+    else
+      transactionPersistence.getTransaction(transactionId).setHandler(getAr -> {
+        if (getAr.failed()) resultHandler.handle(Future.failedFuture(getAr.cause()));
+        if (getAr.result() == null) resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(404).setStatusMessage("Not Found")));
+        if (!getAr.result().getFrom().equals(context.getUser().getString("username")))
+          resultHandler.handle(Future.succeededFuture(new OperationResponse()
+            .setStatusCode(403)
+            .setStatusMessage("Forbidden")
+            .setPayload(Buffer.buffer("You are not authorized to update " + transactionId + " because you are not the transaction creator"))));
+        transactionPersistence.updateTransaction(transactionId, body).setHandler(ar -> {
+          if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
+          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
+        });
       });
-    });
   }
 
   @Override

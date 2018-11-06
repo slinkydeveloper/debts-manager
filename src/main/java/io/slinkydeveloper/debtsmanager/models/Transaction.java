@@ -3,30 +3,23 @@ package io.slinkydeveloper.debtsmanager.models;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
-import java.util.List;
-import java.util.Map;
 
 @DataObject(generateConverter = true, publicConverter = false)
 public class Transaction {
 
-  private Float value;
-  private String description;
-  private String from;
   private String id;
-  private String at;
+  private String from;
   private String to;
+  private Double value;
+  private String description;
+  private String at;
 
-  public Transaction (
-    Float value,
-    String description,
-    String from,
-    String id,
-    String at
-  ) {
+  public Transaction(String id, String from, String to, Double value, String description, String at) {
+    this.id = id;
+    this.from = from;
+    this.to = to;
     this.value = value;
     this.description = description;
-    this.from = from;
-    this.id = id;
     this.at = at;
   }
 
@@ -40,6 +33,7 @@ public class Transaction {
     this.from = other.getFrom();
     this.id = other.getId();
     this.at = other.getAt();
+    this.to = other.getTo();
   }
 
   public JsonObject toJson() {
@@ -48,11 +42,11 @@ public class Transaction {
     return json;
   }
 
-  @Fluent public Transaction setValue(Float value){
+  @Fluent public Transaction setValue(Double value){
     this.value = value;
     return this;
   }
-  public Float getValue() {
+  public Double getValue() {
     return this.value;
   }
 
