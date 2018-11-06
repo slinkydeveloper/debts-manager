@@ -28,8 +28,7 @@ paths:
         '401':
           description: 'Expired token'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
     post:
       summary: 'Create a Transaction'
@@ -47,9 +46,10 @@ paths:
           description: 'Successful response.'
         '401':
           description: 'Expired Token'
+        '403':
+          description: "Trying to create a transaction to a user not connected to logged user"
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
   '/transactions/{transactionId}':
     summary: 'Path used to manage a single Transaction.'
@@ -70,8 +70,7 @@ paths:
         '403':
           description: "Trying to get a transaction where `from` or `to` is not actual\nuser"
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
     put:
       summary: 'Update a Transaction'
@@ -92,8 +91,7 @@ paths:
         '403':
           description: 'Trying to update a transaction where `from` is not actual user'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
     delete:
       summary: 'Delete a Transaction'
@@ -107,12 +105,10 @@ paths:
         '403':
           description: 'Trying to remove a transaction where `from` is not actual user'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
     parameters:
-      -
-        name: transactionId
+      - name: transactionId
         in: path
         description: 'A unique identifier for a `Transaction`.'
         required: true
@@ -122,6 +118,13 @@ paths:
     get:
       summary: 'Get status of actual user'
       operationId: getUserStatus
+      parameters:
+        - name: till
+          in: query
+          required: false
+          schema:
+            type: string
+            format: 'date-time'
       responses:
         '200':
           description: 'Status of logged user'
@@ -132,8 +135,7 @@ paths:
         '401':
           description: 'Expired token'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
   /login:
     post:
@@ -162,8 +164,7 @@ paths:
         '400':
           description: 'Wrong username or password'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
   /register:
     post:
       summary: Register
@@ -212,8 +213,7 @@ paths:
         '401':
           description: 'Expired token'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
   /connectUser:
     post:
@@ -234,8 +234,7 @@ paths:
         '401':
           description: 'Expired token'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
   /users:
     get:
       summary: 'Get all users'
@@ -252,8 +251,7 @@ paths:
         '401':
           description: 'Expired token'
       security:
-        -
-          loggedUserToken: []
+        - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
 components:
   schemas:
@@ -262,22 +260,18 @@ components:
       type: string
     NewTransaction:
       allOf:
-        -
+        - properties:
+            to:
+              $ref: '#/components/schemas/Username'
           required:
-            - from
             - to
             - description
             - value
           type: object
-        -
-          $ref: '#/components/schemas/UpdateTransaction'
+        - $ref: '#/components/schemas/UpdateTransaction'
     UpdateTransaction:
       type: object
       properties:
-        from:
-          $ref: '#/components/schemas/Username'
-        to:
-          $ref: '#/components/schemas/Username'
         value:
           type: number
         description:
@@ -285,10 +279,8 @@ components:
           type: string
     Transaction:
       allOf:
-        -
-          $ref: '#/components/schemas/UpdateTransaction'
-        -
-          required:
+        - $ref: '#/components/schemas/NewTransaction'
+        - required:
             - from
             - to
             - id
@@ -297,6 +289,8 @@ components:
             - at
           type: object
           properties:
+            from:
+              $ref: '#/components/schemas/Username'
             id:
               type: string
             at:

@@ -10,8 +10,5 @@ public interface StatusPersistence {
 
   Future<Status> getStatus(String username);
   Future<Status> getStatusTill(String username, ZonedDateTime time);
-  void triggerStatusRefreshFromTransactionUpdate(Transaction transaction);
-  void triggerStatusRefreshFromTransactionRemove(Transaction transaction);
-  void triggerStatusRefreshFromTransactionCreation(Transaction transaction);
 
 }

@@ -33,7 +33,7 @@ public class UsersServiceImpl implements UsersService {
         if (ar.result()) {
           resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
         } else {
-          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Wrong username or password")));
+          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Bad Request").setPayload(Buffer.buffer("Wrong username or password"))));
         }
       } else {
         resultHandler.handle(Future.failedFuture(ar.cause()));

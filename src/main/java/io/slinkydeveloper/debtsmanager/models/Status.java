@@ -4,16 +4,17 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
 import java.util.List;
+import java.util.Map;
 
 @DataObject(generateConverter = true, publicConverter = false)
 public class Status {
 
   private List<Transaction> transactions;
-  private String users;
+  private Map<String, Double> users;
 
   public Status (
     List<Transaction> transactions,
-    String users
+    Map<String, Double> users
   ) {
     this.transactions = transactions;
     this.users = users;
@@ -42,11 +43,11 @@ public class Status {
     return this.transactions;
   }
 
-  @Fluent public Status setUsers(String users){
+  @Fluent public Status setUsers(Map<String, Double>  users){
     this.users = users;
     return this;
   }
-  public String getUsers() {
+  public Map<String, Double> getUsers() {
     return this.users;
   }
 

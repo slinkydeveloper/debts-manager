@@ -11,8 +11,8 @@ public interface TransactionPersistence {
 
   Future<List<Transaction>> getTransactionsByUser(String username);
   Future<Transaction> getTransaction(String id);
-  Future<Transaction> newTransaction(NewTransaction transaction);
-  Future<Void> updateTransaction(UpdateTransaction transaction);
+  Future<Transaction> newTransaction(NewTransaction transaction, String from);
+  Future<Void> updateTransaction(String id, UpdateTransaction transaction);
   Future<Void> removeTransaction(String id);
 
 }

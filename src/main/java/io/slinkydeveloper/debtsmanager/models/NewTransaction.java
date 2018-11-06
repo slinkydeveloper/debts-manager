@@ -7,18 +7,15 @@ import io.vertx.core.json.JsonObject;
 @DataObject(generateConverter = true, publicConverter = false)
 public class NewTransaction {
 
-  private String from;
   private String to;
   private Float value;
   private String description;
 
   public NewTransaction (
-    String from,
     String to,
     Float value,
     String description
   ) {
-    this.from = from;
     this.to = to;
     this.value = value;
     this.description = description;
@@ -29,7 +26,6 @@ public class NewTransaction {
   }
 
   public NewTransaction(NewTransaction other) {
-    this.from = other.getFrom();
     this.to = other.getTo();
     this.value = other.getValue();
     this.description = other.getDescription();
@@ -39,14 +35,6 @@ public class NewTransaction {
     JsonObject json = new JsonObject();
     NewTransactionConverter.toJson(this, json);
     return json;
-  }
-
-  @Fluent public NewTransaction setFrom(String from){
-    this.from = from;
-    return this;
-  }
-  public String getFrom() {
-    return this.from;
   }
 
   @Fluent public NewTransaction setTo(String to){
