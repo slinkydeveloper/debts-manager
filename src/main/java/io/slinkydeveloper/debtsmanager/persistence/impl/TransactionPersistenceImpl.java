@@ -91,7 +91,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
     client.preparedQuery("DELETE FROM \"transaction\" WHERE id=$1 RETURNING *", Tuple.of(id), ar -> {
         if (ar.failed()) fut.fail(ar.cause());
       Transaction t = mapRowToTransaction(ar.result().iterator().next());
-        statusCacheManager.triggerRefreshFromTransactionCreation(t);
+        statusCacheManager.triggerRefreshFromTransactionRemove(t);
         fut.complete();
       });
     return fut;

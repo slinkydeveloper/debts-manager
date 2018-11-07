@@ -9,6 +9,8 @@ import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
