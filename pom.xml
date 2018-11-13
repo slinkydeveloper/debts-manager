@@ -13,7 +13,7 @@
 
   <properties>
     <main.verticle>io.slinkydeveloper.debtsmanager.MainVerticle</main.verticle>
-    <vertx.version>3.6.0-SNAPSHOT</vertx.version>
+    <vertx.version>3.6.0.CR1</vertx.version>
   </properties>
 
 
@@ -27,12 +27,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-service-proxy</artifactId>
       <version>${vertx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-service-proxy</artifactId>
-      <version>${vertx.version}</version>
-      <classifier>processor</classifier>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -175,14 +169,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>9</source>
-          <target>9</target>
-        </configuration>
       </plugin>
     </plugins>
   </build>

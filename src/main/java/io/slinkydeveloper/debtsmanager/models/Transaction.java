@@ -4,17 +4,17 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
 
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject(generateConverter = true)
 public class Transaction {
 
   private String id;
   private String from;
   private String to;
-  private Double value;
+  private double value;
   private String description;
   private String at;
 
-  public Transaction(String id, String from, String to, Double value, String description, String at) {
+  public Transaction(String id, String from, String to, double value, String description, String at) {
     this.id = id;
     this.from = from;
     this.to = to;
@@ -42,11 +42,11 @@ public class Transaction {
     return json;
   }
 
-  @Fluent public Transaction setValue(Double value){
+  @Fluent public Transaction setValue(double value){
     this.value = value;
     return this;
   }
-  public Double getValue() {
+  public double getValue() {
     return this.value;
   }
 

@@ -3,9 +3,10 @@ package io.slinkydeveloper.debtsmanager.models;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
+
 import java.util.List;
 
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject(generateConverter = true)
 public class GetConnectedUsers200Response {
 
   private List<String> allowedTo;

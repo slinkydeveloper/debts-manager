@@ -3,10 +3,8 @@ package io.slinkydeveloper.debtsmanager.models;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
-import java.util.List;
-import java.util.Map;
 
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject(generateConverter = true)
 public class UpdateTransaction {
 
   private Double value;

@@ -4,16 +4,16 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.annotations.Fluent;
 import io.vertx.core.json.JsonObject;
 
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject(generateConverter = true)
 public class NewTransaction {
 
   private String to;
-  private Double value;
+  private double value;
   private String description;
 
   public NewTransaction (
     String to,
-    Double value,
+    double value,
     String description
   ) {
     this.to = to;
@@ -45,11 +45,11 @@ public class NewTransaction {
     return this.to;
   }
 
-  @Fluent public NewTransaction setValue(Double value){
+  @Fluent public NewTransaction setValue(double value){
     this.value = value;
     return this;
   }
-  public Double getValue() {
+  public double getValue() {
     return this.value;
   }
 

@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject(generateConverter = true)
 public class AuthCredentials {
 
   private String username;
@@ -25,7 +25,7 @@ public class AuthCredentials {
   }
 
   public AuthCredentials(JsonObject json) {
-    LoginRequestBodyConverter.fromJson(json, this);
+    AuthCredentialsConverter.fromJson(json, this);
   }
 
   public AuthCredentials(AuthCredentials other) {
@@ -35,7 +35,7 @@ public class AuthCredentials {
 
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
-    LoginRequestBodyConverter.toJson(this, json);
+    AuthCredentialsConverter.toJson(this, json);
     return json;
   }
 
