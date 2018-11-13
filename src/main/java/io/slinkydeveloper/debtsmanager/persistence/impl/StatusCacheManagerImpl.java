@@ -18,7 +18,6 @@ public class StatusCacheManagerImpl implements StatusCacheManager {
 
   private final RedisClient redisClient;
   private final String statusPrefix;
-  private final StatusPersistence statusPersistence;
 
   private final static Logger log = LoggerFactory.getLogger(StatusCacheManager.class);
 
@@ -26,10 +25,9 @@ public class StatusCacheManagerImpl implements StatusCacheManager {
     if (ar.failed()) log.warn("Error getting status from db\n" + Arrays.deepToString(ar.cause().getStackTrace()));
   };
 
-  public StatusCacheManagerImpl(RedisClient redisClient, String statusPrefix, StatusPersistence statusPersistence) {
+  public StatusCacheManagerImpl(RedisClient redisClient, String statusPrefix) {
     this.redisClient = redisClient;
     this.statusPrefix = statusPrefix;
-    this.statusPersistence = statusPersistence;
   }
 
   @Override
@@ -46,14 +44,6 @@ public class StatusCacheManagerImpl implements StatusCacheManager {
   @Override
   public void triggerRefreshFromTransactionCreation(String from, String to, double value) {
     updateCouple(from, to, value, -value);
-  }
-
-  @Override
-  public void triggerRebuildStatusCacheOfUser(String username) {
-    statusPersistence.getStatusFromDb(username).setHandler(ar -> {
-      if (ar.succeeded()) pushStatusCache(username, ar.result());
-      else log.error("Error getting status from db\n" + Arrays.deepToString(ar.cause().getStackTrace()));
-    });
   }
 
   public void updateCouple(String from, String to, double fromToValue, double toFromValue) {

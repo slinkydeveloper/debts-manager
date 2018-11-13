@@ -32,6 +32,6 @@ public interface UsersService {
   void getUsers(
     OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 
-  void connectUser(String body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
+  void connectUser(String userToConnect, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 
 }

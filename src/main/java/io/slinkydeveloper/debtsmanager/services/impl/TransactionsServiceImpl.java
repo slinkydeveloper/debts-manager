@@ -47,10 +47,11 @@ public class TransactionsServiceImpl implements TransactionsService {
       if (!ar.result()) resultHandler.handle(Future.succeededFuture(
         new OperationResponse().setStatusCode(403).setStatusMessage("Forbidden").setPayload(Buffer.buffer("You need " + body.getTo() + " authorization to add a new transaction with him as recipient"))
       ));
-      transactionPersistence.newTransaction(body, context.getUser().getString("username")).setHandler(newAr -> {
-        if (newAr.failed()) resultHandler.handle(Future.failedFuture(newAr.cause()));
-        resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(newAr.result().toJson())));
-      });
+      else
+        transactionPersistence.newTransaction(body, context.getUser().getString("username")).setHandler(newAr -> {
+          if (newAr.failed()) resultHandler.handle(Future.failedFuture(newAr.cause()));
+          resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(newAr.result().toJson())));
+        });
     });
   }
 

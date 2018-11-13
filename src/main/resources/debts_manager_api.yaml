@@ -163,8 +163,6 @@ paths:
             text/plain: {}
         '400':
           description: 'Wrong username or password'
-      security:
-        - loggedUserToken: []
   /register:
     post:
       summary: Register
@@ -215,19 +213,19 @@ paths:
       security:
         - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
-  /connectUser:
-    post:
+  /connectUser/{userToConnect}:
+    get:
       summary: 'Connect user'
       description: "Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction.
                     If you want to send transactions from you to userX, userX must connect you calling this endpoint"
       operationId: connectUser
       x-vertx-event-bus: users.debts_manager
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Username'
-        required: true
+      parameters:
+        - name: userToConnect
+          required: true
+          in: path
+          schema:
+            $ref: '#/components/schemas/Username'
       responses:
         '200':
           description: 'User connected'

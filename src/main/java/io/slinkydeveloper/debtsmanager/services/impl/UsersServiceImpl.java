@@ -7,6 +7,8 @@ import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.ext.web.api.OperationRequest;
@@ -19,6 +21,8 @@ public class UsersServiceImpl implements UsersService {
   private final Vertx vertx;
   private final UserPersistence persistence;
   private final JWTAuth auth;
+
+  private final static Logger log = LoggerFactory.getLogger(UsersService.class);
 
   public UsersServiceImpl(Vertx vertx, UserPersistence persistence, JWTAuth auth) {
     this.vertx = vertx;
@@ -45,9 +49,16 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public void register(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
     body.hashPassword();
+    log.info("Registering new user: " + body.getUsername());
     persistence.addUser(body).setHandler(ar -> {
       if (ar.succeeded()) {
-        resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
+        if (!ar.result()) {
+          log.warn("User is trying to register again: " + body.getUsername());
+          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Bad Request").setPayload(Buffer.buffer("User " + body.getUsername() + " already exists"))));
+        } else {
+          log.info("User successfully registered: " + body.getUsername());
+          resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
+        }
       } else {
         resultHandler.handle(Future.failedFuture(ar.cause()));
       }
@@ -78,8 +89,8 @@ public class UsersServiceImpl implements UsersService {
   }
 
   @Override
-  public void connectUser(String body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
-    persistence.addUserConnection(body, context.getUser().getString("username")).setHandler(ar -> {
+  public void connectUser(String userToConnect, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
+    persistence.addUserConnection(userToConnect, context.getUser().getString("username")).setHandler(ar -> {
       if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
       resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
     });
@@ -88,7 +99,7 @@ public class UsersServiceImpl implements UsersService {
   private String generateToken(String username) {
     return auth.generateToken(
       new JsonObject().put("username", username),
-      new JWTOptions().setExpiresInMinutes(60).setIssuer("Debts Manager Backend").setSubject("Debts Manager API")
+      new JWTOptions().setExpiresInMinutes(60).setIssuer("Debts Manager Backend").setSubject("Debts Manager API").setAlgorithm("RS256")
     );
   }
 

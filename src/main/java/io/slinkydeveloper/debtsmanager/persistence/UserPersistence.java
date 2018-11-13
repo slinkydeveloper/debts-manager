@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface UserPersistence {
 
-  Future<Void> addUser(AuthCredentials user);
+  Future<Boolean> addUser(AuthCredentials user);
   Future<Boolean> userExists(AuthCredentials user);
   Future<List<String>> getUsersList();
   Future<Void> addUserConnection(String from, String to);

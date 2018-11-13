@@ -1,0 +1,9 @@
+{
+  "redis-address": "localhost",
+  "redis-port": 6379,
+  "pg-port": 6543,
+  "pg-address": "localhost",
+  "pg-db": "debts-manager",
+  "pg-username": "postgres",
+  "pg-password": "postgres"
+}

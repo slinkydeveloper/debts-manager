@@ -27,7 +27,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
   @Override
   public Future<List<Transaction>> getTransactionsByUser(String username) {
     Future<List<Transaction>> fut = Future.future();
-    client.preparedQuery("SELECT * FROM \"transaction\" WHERE to=$1 OR from=$1", Tuple.of(username), ar -> {
+    client.preparedQuery("SELECT * FROM \"transaction\" WHERE \"transaction\".\"to\"=$1 OR \"transaction\".\"from\"=$1", Tuple.of(username), ar -> {
       if (ar.failed()) fut.fail(ar.cause());
       List<Transaction> result = StreamSupport.stream(ar.result().spliterator(), false).map(this::mapRowToTransaction).collect(Collectors.toList());
       fut.complete(result);

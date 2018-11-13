@@ -22,11 +22,11 @@ public class UserPersistenceImpl implements UserPersistence {
   }
 
   @Override
-  public Future<Void> addUser(AuthCredentials user) {
-    Future<Void> fut = Future.future();
+  public Future<Boolean> addUser(AuthCredentials user) {
+    Future<Boolean> fut = Future.future();
     client.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2) ON CONFLICT DO NOTHING", Tuple.of(user.getUsername(), user.getPassword()), ar -> {
       if (ar.failed()) fut.fail(ar.cause());
-      fut.complete();
+      fut.complete(ar.result().rowCount() == 1);
     });
     return fut;
   }
@@ -61,21 +61,21 @@ public class UserPersistenceImpl implements UserPersistence {
   @Override
   public Future<List<String>> getAllowedFrom(String username) {
     Future<List<String>> fut = Future.future();
-    client.preparedQuery("SELECT from FROM userrelationship WHERE to=$1", Tuple.of(username), generateUserListHandler(fut));
+    client.preparedQuery("SELECT \"from\" FROM userrelationship WHERE \"to\"=$1", Tuple.of(username), generateUserListHandler(fut));
     return fut;
   }
 
   @Override
   public Future<List<String>> getAllowedTo(String username) {
     Future<List<String>> fut = Future.future();
-    client.preparedQuery("SELECT to FROM userrelationship WHERE from=$1", Tuple.of(username), generateUserListHandler(fut));
+    client.preparedQuery("SELECT \"to\" FROM userrelationship WHERE \"from\"=$1", Tuple.of(username), generateUserListHandler(fut));
     return fut;
   }
 
   @Override
   public Future<Boolean> isAllowed(String from, String to) {
     Future<Boolean> fut = Future.future();
-    client.preparedQuery("SELECT to FROM userrelationship WHERE from=$1 AND to=$2", Tuple.of(from, to), ar -> {
+    client.preparedQuery("SELECT \"to\" FROM userrelationship WHERE \"from\"=$1 AND \"to\"=$2", Tuple.of(from, to), ar -> {
       if (ar.failed()) fut.fail(ar.cause());
       fut.complete(ar.result().rowCount() == 1);
     });

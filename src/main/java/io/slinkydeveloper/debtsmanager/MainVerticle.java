@@ -1,21 +1,35 @@
 package io.slinkydeveloper.debtsmanager;
 
+import io.reactiverse.pgclient.PgClient;
+import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgPoolOptions;
+import io.slinkydeveloper.debtsmanager.models.Transaction;
+import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
+import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
+import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
+import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
+import io.slinkydeveloper.debtsmanager.services.TransactionsService;
+import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.api.contract.RouterFactoryOptions;
 import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
-import io.vertx.ext.web.Router;
-import io.vertx.core.Future;
 import io.vertx.ext.web.handler.JWTAuthHandler;
+import io.vertx.ext.web.handler.LoggerHandler;
+import io.vertx.redis.RedisClient;
+import io.vertx.redis.RedisOptions;
 import io.vertx.serviceproxy.ServiceBinder;
 
-import io.slinkydeveloper.debtsmanager.services.*;
-
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainVerticle extends AbstractVerticle {
@@ -25,44 +39,18 @@ public class MainVerticle extends AbstractVerticle {
 
   List<MessageConsumer<JsonObject>> registeredConsumers;
 
-  private JWTAuth createJwtAuth(JsonObject jwk) {
-    return JWTAuth.create(vertx,
-      new JWTAuthOptions().addJwk(jwk)
-    );
-  }
-
-  /**
-   * This method starts all services
-   */
-  private void startServices() {
-    serviceBinder = new ServiceBinder(vertx);
-
-    TransactionsService transactionsService = TransactionsService.create(vertx);
-    registeredConsumers.add(
-      serviceBinder
-        .setAddress("transactions.debts_manager")
-        .register(TransactionsService.class, transactionsService)
-    );
-    UsersService usersService = UsersService.create(vertx);
-    registeredConsumers.add(
-      serviceBinder
-        .setAddress("users.debts_manager")
-        .register(UsersService.class, usersService)
-    );
-  }
-
   /**
    * This method constructs the router factory, mounts services and handlers and starts the http server with built router
    * @return
    */
   private Future<Void> startHttpServer(JWTAuth auth) {
     Future<Void> future = Future.future();
-    OpenAPI3RouterFactory.create(this.vertx, getClass().getResource("/openapi.yaml").getFile(), openAPI3RouterFactoryAsyncResult -> {
+    OpenAPI3RouterFactory.create(this.vertx, "debts_manager_api.yaml", openAPI3RouterFactoryAsyncResult -> {
       if (openAPI3RouterFactoryAsyncResult.succeeded()) {
         OpenAPI3RouterFactory routerFactory = openAPI3RouterFactoryAsyncResult.result();
 
         // Enable automatic response when ValidationException is thrown
-        routerFactory.setOptions(new RouterFactoryOptions().setMountValidationFailureHandler(true));
+        routerFactory.setOptions(new RouterFactoryOptions().setMountValidationFailureHandler(true).addGlobalHandler(LoggerHandler.create()));
 
         // Mount services on event bus based on extensions
         routerFactory.mountServicesFromExtensions();
@@ -72,7 +60,7 @@ public class MainVerticle extends AbstractVerticle {
 
         // Generate the router
         Router router = routerFactory.getRouter();
-        server = vertx.createHttpServer(new HttpServerOptions().setPort(8080).setHost("localhost"));
+        server = vertx.createHttpServer(new HttpServerOptions().setPort(config().getInteger("http-server-port", 8080)).setHost(config().getString("http-server-host", "localhost")));
         server.requestHandler(router).listen();
         future.complete();
       } else {
@@ -86,12 +74,43 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> future) {
     String jwkPath = config().getString("jwkPath", "jwk.json");
-    vertx.fileSystem().readFile(jwkPath, ar -> {
-      if (ar.failed()) throw new IllegalArgumentException("Cannot find jwk at " + jwkPath);
-      JsonObject jwkObject = ar.result().toJsonObject();
-      JWTAuth auth = createJwtAuth(jwkObject);
-      startServices();
-      startHttpServer(auth).setHandler(future.completer());
+    CompositeFuture.all(
+      loadResource(jwkPath),
+      loadResource("build_status_query.sql"),
+      loadResource("build_status_before_query.sql")
+    ).setHandler(ar -> {
+      if (ar.failed()) future.fail(ar.cause());
+      else {
+        RedisClient redisClient = RedisClient.create(vertx,
+          new RedisOptions()
+            .setHost(config().getString("redis-address", "localhost"))
+            .setPort(config().getInteger("redis-port", 6379))
+        );
+        PgPool pgClient = PgClient.pool(vertx,
+          new PgPoolOptions()
+            .setPort(config().getInteger("pg-port", 6379))
+            .setHost(config().getString("pg-address", "localhost"))
+            .setDatabase(config().getString("pg-db", "debts-manager"))
+            .setUser(config().getString("pg-username", "postgres"))
+            .setPassword(config().getString("pg-password", "postgres"))
+        );
+        String statusPrefix = config().getString("redis-status-prefix", "status:");
+        StatusCacheManager statusCacheManager = StatusCacheManager.create(redisClient, statusPrefix);
+        UserPersistence userPersistence = UserPersistence.create(pgClient);
+        TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, statusCacheManager);
+        StatusPersistence statusPersistence = StatusPersistence.create(
+          redisClient,
+          pgClient,
+          statusPrefix,
+          ar.result().resultAt(1).toString(),
+          ar.result().resultAt(2).toString(),
+          statusCacheManager
+        );
+        JsonObject jwkObject = ((Buffer)ar.result().resultAt(0)).toJsonObject();
+        JWTAuth auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(jwkObject));
+        startServices(userPersistence, transactionPersistence, statusPersistence, auth);
+        startHttpServer(auth).setHandler(future.completer());
+      }
     });
   }
 
@@ -102,6 +121,31 @@ public class MainVerticle extends AbstractVerticle {
   public void stop(){
     this.server.close();
     registeredConsumers.forEach(c -> serviceBinder.unregister(c));
+  }
+
+  private Future<Buffer> loadResource(String path) {
+    Future<Buffer> fut = Future.future();
+    vertx.fileSystem().readFile(path, fut.completer());
+    return fut;
+  }
+
+  private void startServices(UserPersistence userPersistence, TransactionPersistence transactionPersistence, StatusPersistence statusPersistence, JWTAuth auth) {
+    serviceBinder = new ServiceBinder(vertx);
+
+    registeredConsumers = new ArrayList<>();
+
+    TransactionsService transactionsService = TransactionsService.create(vertx, statusPersistence, transactionPersistence, userPersistence);
+    registeredConsumers.add(
+      serviceBinder
+        .setAddress("transactions.debts_manager")
+        .register(TransactionsService.class, transactionsService)
+    );
+    UsersService usersService = UsersService.create(vertx, userPersistence, auth);
+    registeredConsumers.add(
+      serviceBinder
+        .setAddress("users.debts_manager")
+        .register(UsersService.class, usersService)
+    );
   }
 
 }
