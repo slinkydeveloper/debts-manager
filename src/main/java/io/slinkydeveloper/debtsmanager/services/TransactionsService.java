@@ -1,16 +1,17 @@
 package io.slinkydeveloper.debtsmanager.services;
 
+import io.slinkydeveloper.debtsmanager.models.NewTransaction;
+import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
+import io.slinkydeveloper.debtsmanager.services.impl.TransactionsServiceImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.api.*;
+import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.ext.web.api.OperationResponse;
 import io.vertx.ext.web.api.generator.WebApiServiceGen;
-
-import io.slinkydeveloper.debtsmanager.models.*;
-import io.slinkydeveloper.debtsmanager.services.impl.TransactionsServiceImpl;
 
 @WebApiServiceGen
 public interface TransactionsService {

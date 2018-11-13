@@ -1,5 +1,8 @@
 package io.slinkydeveloper.debtsmanager;
 
+import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
+import io.slinkydeveloper.debtsmanager.models.NewTransaction;
+import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
@@ -15,8 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import io.slinkydeveloper.debtsmanager.models.*;
 
 public class ApiClient {
     private WebClient client;

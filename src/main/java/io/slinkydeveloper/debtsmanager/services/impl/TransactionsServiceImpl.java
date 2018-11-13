@@ -1,21 +1,23 @@
 package io.slinkydeveloper.debtsmanager.services.impl;
 
+import io.slinkydeveloper.debtsmanager.models.NewTransaction;
+import io.slinkydeveloper.debtsmanager.models.Transaction;
+import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
+import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
-import io.vertx.ext.web.api.*;
-
-import io.slinkydeveloper.debtsmanager.models.*;
-import io.slinkydeveloper.debtsmanager.services.TransactionsService;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.ext.web.api.OperationResponse;
 
 import java.time.ZonedDateTime;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class TransactionsServiceImpl implements TransactionsService {
 
@@ -106,11 +108,11 @@ public class TransactionsServiceImpl implements TransactionsService {
     if (till == null)
       statusPersistence
         .getStatus(context.getUser().getString("username"))
-        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, Status::toJson));
+        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, ServiceUtils::buildJsonFromStatusMap));
     else
       statusPersistence
         .getStatusTill(context.getUser().getString("username"), ZonedDateTime.parse(till))
-        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, Status::toJson));
+        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, ServiceUtils::buildJsonFromStatusMap));
   }
 
 }
