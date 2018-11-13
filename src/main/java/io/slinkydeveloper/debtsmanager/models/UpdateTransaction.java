@@ -9,11 +9,11 @@ import java.util.Map;
 @DataObject(generateConverter = true, publicConverter = false)
 public class UpdateTransaction {
 
-  private Float value;
+  private Double value;
   private String description;
 
   public UpdateTransaction (
-    Float value,
+    Double value,
     String description
   ) {
     this.value = value;
@@ -35,11 +35,11 @@ public class UpdateTransaction {
     return json;
   }
 
-  @Fluent public UpdateTransaction setValue(Float value){
+  @Fluent public UpdateTransaction setValue(Double value){
     this.value = value;
     return this;
   }
-  public Float getValue() {
+  public Double getValue() {
     return this.value;
   }
 

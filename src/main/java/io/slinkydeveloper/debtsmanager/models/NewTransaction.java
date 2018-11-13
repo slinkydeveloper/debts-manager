@@ -8,12 +8,12 @@ import io.vertx.core.json.JsonObject;
 public class NewTransaction {
 
   private String to;
-  private Float value;
+  private Double value;
   private String description;
 
   public NewTransaction (
     String to,
-    Float value,
+    Double value,
     String description
   ) {
     this.to = to;
@@ -45,11 +45,11 @@ public class NewTransaction {
     return this.to;
   }
 
-  @Fluent public NewTransaction setValue(Float value){
+  @Fluent public NewTransaction setValue(Double value){
     this.value = value;
     return this;
   }
-  public Float getValue() {
+  public Double getValue() {
     return this.value;
   }
 
