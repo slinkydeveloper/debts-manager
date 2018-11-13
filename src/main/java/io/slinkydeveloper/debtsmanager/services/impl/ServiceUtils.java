@@ -8,10 +8,15 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationResponse;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class ServiceUtils {
+
+  public static JsonObject buildJsonFromStatusMap(Map<String, Double> status) {
+    return status.entrySet().stream().collect(JsonObject::new, (j, e) -> j.put(e.getKey(), e.getValue()), JsonObject::mergeIn);
+  }
 
   public static <T> Handler<AsyncResult<T>> sendRetrievedObjectHandler(Handler<AsyncResult<OperationResponse>> resultHandler, Function<T, JsonObject> mapper) {
     return ar -> {

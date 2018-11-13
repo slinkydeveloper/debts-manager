@@ -53,7 +53,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
       Tuple.of(transaction.getDescription(), from, transaction.getTo(), transaction.getValue()), ar -> {
       if (ar.failed()) fut.fail(ar.cause());
       Transaction t = mapRowToTransaction(ar.result().iterator().next());
-      statusCacheManager.triggerRefreshFromTransactionCreation(t);
+      statusCacheManager.triggerRefreshFromTransactionCreation(from, transaction.getTo(), transaction.getValue());
       fut.complete(t);
     });
     return fut;
@@ -77,8 +77,8 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
     client.preparedQuery(query, tuple, ar -> {
         if (ar.failed()) fut.fail(ar.cause());
         if (updateTransaction.getValue() != null) {
-          Transaction t = mapRowToTransaction(ar.result().iterator().next());
-          statusCacheManager.triggerRefreshFromTransactionUpdate(t);
+          Transaction oldT = mapRowToTransaction(ar.result().iterator().next());
+          statusCacheManager.triggerRefreshFromTransactionUpdate(oldT.getFrom(), oldT.getTo(), oldT.getValue(), updateTransaction.getValue());
         }
         fut.complete();
     });
@@ -90,10 +90,10 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
     Future<Void> fut = Future.future();
     client.preparedQuery("DELETE FROM \"transaction\" WHERE id=$1 RETURNING *", Tuple.of(id), ar -> {
         if (ar.failed()) fut.fail(ar.cause());
-      Transaction t = mapRowToTransaction(ar.result().iterator().next());
-        statusCacheManager.triggerRefreshFromTransactionRemove(t);
+        Transaction t = mapRowToTransaction(ar.result().iterator().next());
+        statusCacheManager.triggerRefreshFromTransactionRemove(t.getFrom(), t.getTo(), t.getValue());
         fut.complete();
-      });
+    });
     return fut;
   }
 

@@ -2,15 +2,12 @@ package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgRowSet;
-import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
