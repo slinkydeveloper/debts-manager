@@ -31,8 +31,6 @@
     <orderEntry type="library" name="Maven: io.vertx:vertx-service-proxy:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-web-api-contract:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: com.networknt:json-schema-validator:0.1.17" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-ext:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" name="Maven: io.swagger.parser.v3:swagger-parser:2.0.5" level="project" />
     <orderEntry type="library" name="Maven: io.swagger.parser.v3:swagger-parser-v2-converter:2.0.5" level="project" />
@@ -63,7 +61,6 @@
     <orderEntry type="library" name="Maven: io.swagger.parser.v3:swagger-parser-core:2.0.5" level="project" />
     <orderEntry type="library" name="Maven: io.swagger.parser.v3:swagger-parser-v3:2.0.5" level="project" />
     <orderEntry type="library" name="Maven: io.swagger.core.v3:swagger-core:2.0.5" level="project" />
-    <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
     <orderEntry type="library" name="Maven: io.swagger.core.v3:swagger-annotations:2.0.5" level="project" />
     <orderEntry type="library" name="Maven: javax.validation:validation-api:1.1.0.Final" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
@@ -76,15 +73,47 @@
     <orderEntry type="library" name="Maven: io.vertx:vertx-web-common:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-auth-common:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-bridge-common:3.6.0.CR1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-unit:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-codegen:processor:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: org.mvel:mvel2:2.3.1.Final" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-web-client:3.6.0.CR1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-auth-jwt:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-jwt:3.6.0.CR1" level="project" />
     <orderEntry type="library" name="Maven: io.reactiverse:reactive-pg-client:0.10.6" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-redis-client:3.6.0.CR1" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.2.3" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.2.3" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-api:5.3.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apiguardian:apiguardian-api:1.0.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.opentest4j:opentest4j:1.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-commons:1.3.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.jupiter:junit-jupiter-engine:5.3.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.junit.platform:junit-platform-engine:1.3.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-junit5:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java-gen:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.reactivex:rxjava:1.3.8" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-gen:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-codegen:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java2:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.vertx:vertx-rx-java2-gen:3.6.0.CR1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: io.reactivex.rxjava2:rxjava:2.2.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.reactivestreams:reactive-streams:1.0.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testcontainers:testcontainers:1.10.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-ext:1.7.25" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.jetbrains:annotations:15.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: javax.annotation:javax.annotation-api:1.3.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.apache.commons:commons-compress:1.18" level="project" />
+    <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.3.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.rnorth.duct-tape:duct-tape:1.0.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.rnorth.visible-assertions:visible-assertions:2.1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna:4.5.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.rnorth:tcp-unix-socket-proxy:1.0.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.scijava:native-lib-loader:2.0.2" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.kohlschutter.junixsocket:junixsocket-common:2.0.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: net.java.dev.jna:jna-platform:4.5.1" level="project" />
   </component>
 </module>

@@ -163,6 +163,8 @@ paths:
             text/plain: {}
         '400':
           description: 'Wrong username or password'
+          content:
+            text/plain: {}
   /register:
     post:
       summary: Register
@@ -187,6 +189,10 @@ paths:
           content:
             text/plain:
               x-description: 'Login token'
+        '400':
+          description: 'Username already exists'
+          content:
+            text/plain: {}
       x-vertx-event-bus: users.debts_manager
   /users/connected:
     get:

@@ -13,6 +13,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class StatusPersistenceImpl implements StatusPersistence {
 
@@ -23,6 +25,11 @@ public class StatusPersistenceImpl implements StatusPersistence {
   private final String buildStatusBeforeQuery;
 
   private final StatusCacheManager statusCacheManager;
+
+  private final static Collector<Row, ?, Map<String, Double>> statusCollector = Collectors.toMap(
+    row -> row.getString("username"),
+    row -> row.getDouble("total")
+  );
 
   public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, StatusCacheManager statusCacheManager) {
     this.redisClient = redisClient;
@@ -64,9 +71,9 @@ public class StatusPersistenceImpl implements StatusPersistence {
   @Override
   public Future<Map<String, Double>> getStatusFromDb(String username) {
     Future<Map<String, Double>> fut = Future.future();
-    pgClient.preparedQuery(buildStatusQuery, ar -> {
+    pgClient.preparedQuery(buildStatusQuery, statusCollector, ar -> {
       if (ar.failed()) fut.fail(ar.cause());
-      fut.complete(buildStatusFromPgRowSet(ar.result()));
+      fut.complete(ar.result().value());
     });
     return fut;
   }
@@ -74,18 +81,10 @@ public class StatusPersistenceImpl implements StatusPersistence {
   @Override
   public Future<Map<String, Double>> getStatusTill(String username, ZonedDateTime time) {
     Future<Map<String, Double>> fut = Future.future();
-    pgClient.preparedQuery(buildStatusBeforeQuery, Tuple.of(username, time.withZoneSameInstant(ZoneId.of("UTC"))), ar -> {
+    pgClient.preparedQuery(buildStatusBeforeQuery, Tuple.of(username, time.withZoneSameInstant(ZoneId.of("UTC"))), statusCollector, ar -> {
       if (ar.failed()) fut.fail(ar.cause());
-      fut.complete(buildStatusFromPgRowSet(ar.result()));
+      fut.complete(ar.result().value());
     });
     return fut;
-  }
-
-  private Map<String, Double> buildStatusFromPgRowSet(PgRowSet set) {
-    Map<String, Double> result = new HashMap<>();
-    for (Row row : set) {
-      result.put(row.getString("username"), row.getDouble("total"));
-    }
-    return result;
   }
 }

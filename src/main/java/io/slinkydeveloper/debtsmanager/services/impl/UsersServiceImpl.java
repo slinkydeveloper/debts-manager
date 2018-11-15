@@ -5,14 +5,15 @@ import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.jwt.JWTOptions;
 import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -38,7 +39,13 @@ public class UsersServiceImpl implements UsersService {
         if (ar.result()) {
           resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
         } else {
-          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Bad Request").setPayload(Buffer.buffer("Wrong username or password"))));
+          resultHandler.handle(Future.succeededFuture(
+            new OperationResponse()
+              .setStatusCode(400)
+              .setStatusMessage("Bad Request")
+              .putHeader(HttpHeaders.CONTENT_TYPE.toString(), "text/plain")
+              .setPayload(Buffer.buffer("Wrong username or password")))
+          );
         }
       } else {
         resultHandler.handle(Future.failedFuture(ar.cause()));
@@ -54,7 +61,13 @@ public class UsersServiceImpl implements UsersService {
       if (ar.succeeded()) {
         if (!ar.result()) {
           log.warn("User is trying to register again: " + body.getUsername());
-          resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(400).setStatusMessage("Bad Request").setPayload(Buffer.buffer("User " + body.getUsername() + " already exists"))));
+          resultHandler.handle(Future.succeededFuture(
+            new OperationResponse()
+              .setStatusCode(400)
+              .setStatusMessage("Bad Request")
+              .putHeader(HttpHeaders.CONTENT_TYPE.toString(), "text/plain")
+              .setPayload(Buffer.buffer("User " + body.getUsername() + " already exists")))
+          );
         } else {
           log.info("User successfully registered: " + body.getUsername());
           resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));

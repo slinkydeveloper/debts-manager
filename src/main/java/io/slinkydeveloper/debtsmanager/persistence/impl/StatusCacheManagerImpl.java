@@ -6,9 +6,9 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
 import io.vertx.redis.RedisClient;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Map;
