@@ -1,9 +1,7 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.*;
-import io.slinkydeveloper.debtsmanager.BaseTestWithEnvironment;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -23,10 +21,9 @@ import io.slinkydeveloper.debtsmanager.models.*;
  */
 @ExtendWith(VertxExtension.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class UsersLoginRegisterServiceTest extends BaseTestWithEnvironment {
+public class UsersLoginRegisterServiceTest extends BaseServicesTest {
 
   private PgPool pgClient;
-  private UsersService usersService;
   private UserPersistence userPersistence;
   private JWTAuth auth;
 
@@ -35,20 +32,20 @@ public class UsersLoginRegisterServiceTest extends BaseTestWithEnvironment {
   public void beforeAll(Vertx vertx, VertxTestContext testContext) throws Exception {
     super.beforeAll(vertx, testContext);
     pgClient = PgClient.pool(vertx,
-        new PgPoolOptions()
-          .setPort(environment.getServicePort("postgres", POSTGRESQL_PORT))
-          .setHost(environment.getServiceHost("postgres", POSTGRESQL_PORT))
-          .setDatabase("debts-manager")
-          .setUser("postgres")
-          .setPassword("postgres")
-      );
-      userPersistence = UserPersistence.create(pgClient);
-      vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
-        auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
-        usersService = UsersService.create(vertx, userPersistence, auth);
-        testContext.completeNow();
-      }));
-  }
+      new PgPoolOptions()
+        .setPort(environment.getServicePort("postgres", POSTGRESQL_PORT))
+        .setHost(environment.getServiceHost("postgres", POSTGRESQL_PORT))
+        .setDatabase("debts-manager")
+        .setUser("postgres")
+        .setPassword("postgres")
+    );
+    userPersistence = UserPersistence.create(pgClient);
+    vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
+      auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
+      usersService = UsersService.create(vertx, userPersistence, auth);
+      testContext.completeNow();
+    }));
+}
 
   @BeforeEach
   public void before(VertxTestContext testContext) {
@@ -130,17 +127,6 @@ public class UsersLoginRegisterServiceTest extends BaseTestWithEnvironment {
           test.completeNow();
         }));
       });
-  }
-
-  private Future<Void> registerBeforeTestLogin(AuthCredentials credentials, VertxTestContext test) {
-    Future<Void> fut = Future.future();
-    usersService.register(new AuthCredentials(credentials), new OperationRequest(), test.succeeding(operationResponse -> {
-      test.verify(() -> {
-        assertSuccessResponse("text/plain", operationResponse);
-      });
-      fut.complete();
-    }));
-    return test.assertComplete(fut);
   }
 
 }
