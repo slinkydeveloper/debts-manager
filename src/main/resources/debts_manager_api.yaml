@@ -188,7 +188,7 @@ paths:
             text/plain:
               x-description: 'Login token'
       x-vertx-event-bus: users.debts_manager
-  /connectedUsers:
+  /users/connected:
     get:
       summary: 'Get Connected Users List'
       operationId: getConnectedUsers
@@ -213,8 +213,8 @@ paths:
       security:
         - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
-  /connectUser/{userToConnect}:
-    get:
+  /users/connect/{userToConnect}:
+    post:
       summary: 'Connect user'
       description: "Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction.
                     If you want to send transactions from you to userX, userX must connect you calling this endpoint"
