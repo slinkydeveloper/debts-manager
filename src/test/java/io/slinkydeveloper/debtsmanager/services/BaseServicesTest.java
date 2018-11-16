@@ -15,13 +15,13 @@ public class BaseServicesTest extends BaseTestWithEnvironment {
 
   protected UsersService usersService;
 
-  protected Future<Void> registerBeforeTestLogin(AuthCredentials credentials, VertxTestContext test) {
-    Future<Void> fut = Future.future();
+  protected Future<String> registerBeforeTestLogin(AuthCredentials credentials, VertxTestContext test) {
+    Future<String> fut = Future.future();
     usersService.register(new AuthCredentials(credentials), new OperationRequest(), test.succeeding(operationResponse -> {
       test.verify(() -> {
         assertSuccessResponse("text/plain", operationResponse);
       });
-      fut.complete();
+      fut.complete(operationResponse.getPayload().toString());
     }));
     return test.assertComplete(fut);
   }

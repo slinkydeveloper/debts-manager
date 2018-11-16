@@ -222,7 +222,7 @@ paths:
   /users/connect/{userToConnect}:
     post:
       summary: 'Connect user'
-      description: "Connect user: when you connect to another user, he will be able to set you as `to` field in a transaction.
+      description: "Connect user: when you connect to another user, he will be able to send transactions to you.
                     If you want to send transactions from you to userX, userX must connect you calling this endpoint"
       operationId: connectUser
       x-vertx-event-bus: users.debts_manager

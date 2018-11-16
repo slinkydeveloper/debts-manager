@@ -40,14 +40,14 @@ public class TestUtils {
   public static void assertJsonResponse(int expectedStatusCode, String expectedStatusMessage, JsonObject expectedResult, OperationResponse actual) {
     assertEquals(Integer.valueOf(expectedStatusCode), actual.getStatusCode());
     assertEquals(expectedStatusMessage, actual.getStatusMessage());
-    assertEquals("text/plain", actual.getHeaders().get("content-type"));
+    assertEquals("application/json", actual.getHeaders().get("content-type"));
     assertEquals(expectedResult, actual.getPayload().toJsonObject());
   }
 
   public static void assertJsonResponse(int expectedStatusCode, String expectedStatusMessage, JsonArray expectedResult, OperationResponse actual) {
     assertEquals(Integer.valueOf(expectedStatusCode), actual.getStatusCode());
     assertEquals(expectedStatusMessage, actual.getStatusMessage());
-    assertEquals("text/plain", actual.getHeaders().get("content-type"));
+    assertEquals("application/json", actual.getHeaders().get("content-type"));
     assertEquals(expectedResult, actual.getPayload().toJsonArray());
   }
 

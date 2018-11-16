@@ -37,6 +37,7 @@ public class UsersServiceImpl implements UsersService {
     persistence.userExists(body).setHandler(ar -> {
       if (ar.succeeded()) {
         if (ar.result()) {
+          log.info("Logged user {}", body.getUsername());
           resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
         } else {
           resultHandler.handle(Future.succeededFuture(
@@ -56,7 +57,6 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public void register(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
     body.hashPassword();
-    log.info("Registering new user: " + body.getUsername());
     persistence.addUser(body).setHandler(ar -> {
       if (ar.succeeded()) {
         if (!ar.result()) {
@@ -69,7 +69,7 @@ public class UsersServiceImpl implements UsersService {
               .setPayload(Buffer.buffer("User " + body.getUsername() + " already exists")))
           );
         } else {
-          log.info("User successfully registered: " + body.getUsername());
+          log.info("User successfully registered: {}", body.getUsername());
           resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithPlainText(Buffer.buffer(generateToken(body.getUsername())))));
         }
       } else {

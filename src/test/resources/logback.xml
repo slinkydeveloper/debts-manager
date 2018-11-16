@@ -23,7 +23,13 @@
     </encoder>
   </appender>
 
-  <logger name="io.slinkydeveloper.debtsmanager" level="WARN"/>
+  <logger name="io.slinkydeveloper.debtsmanager" level="debug"/>
+  <logger name="org.testcontainers" level="INFO"/>
+  <logger name="com.github.dockerjava" level="WARN"/>
   <logger name="io.netty" level="WARN"/>
+
+  <root level="debug">
+    <appender-ref ref="STDOUT"/>
+  </root>
 
 </configuration>
