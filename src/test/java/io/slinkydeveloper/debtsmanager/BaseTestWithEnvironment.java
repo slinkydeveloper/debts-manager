@@ -21,7 +21,7 @@ public abstract class BaseTestWithEnvironment {
   public final static int REDIS_PORT = 6379;
 
   public DockerComposeContainer environment =
-    new DockerComposeContainer(new File("docker-compose-test-env.yml"))
+    new DockerComposeContainer(new File("docker/docker-compose-integration-test-env.yml"))
       .withLocalCompose(true) // Using local compose that supports docker compose file 3
       .withExposedService("postgres", POSTGRESQL_PORT, Wait.forListeningPort())
       .withExposedService("redis", REDIS_PORT);
