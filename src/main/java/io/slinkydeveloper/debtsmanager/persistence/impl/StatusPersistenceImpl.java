@@ -1,17 +1,15 @@
 package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
-import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.vertx.core.Future;
 import io.vertx.redis.RedisClient;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -24,14 +22,14 @@ public class StatusPersistenceImpl implements StatusPersistence {
   private final String buildStatusQuery;
   private final String buildStatusBeforeQuery;
 
-  private final StatusCacheManager statusCacheManager;
+  private final ReadModelManager statusCacheManager;
 
   private final static Collector<Row, ?, Map<String, Double>> statusCollector = Collectors.toMap(
     row -> row.getString("username"),
     row -> row.getDouble("total")
   );
 
-  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, StatusCacheManager statusCacheManager) {
+  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManager statusCacheManager) {
     this.redisClient = redisClient;
     this.pgClient = pgClient;
     this.statusPrefix = statusPrefix;

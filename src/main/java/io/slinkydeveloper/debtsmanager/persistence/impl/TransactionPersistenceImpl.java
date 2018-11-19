@@ -6,7 +6,7 @@ import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
-import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.vertx.core.Future;
 
@@ -17,9 +17,9 @@ import java.util.stream.StreamSupport;
 public class TransactionPersistenceImpl implements TransactionPersistence {
 
   private final PgPool client;
-  private final StatusCacheManager statusCacheManager;
+  private final ReadModelManager statusCacheManager;
 
-  public TransactionPersistenceImpl(PgPool client, StatusCacheManager statusCacheManager) {
+  public TransactionPersistenceImpl(PgPool client, ReadModelManager statusCacheManager) {
     this.client = client;
     this.statusCacheManager = statusCacheManager;
   }

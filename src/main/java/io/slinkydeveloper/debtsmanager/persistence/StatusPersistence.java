@@ -2,6 +2,7 @@ package io.slinkydeveloper.debtsmanager.persistence;
 
 import io.reactiverse.pgclient.PgPool;
 import io.slinkydeveloper.debtsmanager.persistence.impl.StatusPersistenceImpl;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
 import io.vertx.core.Future;
 import io.vertx.redis.RedisClient;
 
@@ -15,7 +16,7 @@ public interface StatusPersistence {
   Future<Map<String, Double>> getStatusFromDb(String username);
   Future<Map<String, Double>> getStatusTill(String username, ZonedDateTime time);
 
-  static StatusPersistence create(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, StatusCacheManager statusCacheManager) {
+  static StatusPersistence create(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManager statusCacheManager) {
     return new StatusPersistenceImpl(redisClient, pgClient, statusPrefix, buildStatusQuery, buildStatusBeforeQuery, statusCacheManager);
   }
 

@@ -3,8 +3,7 @@ package io.slinkydeveloper.debtsmanager;
 import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
-import io.slinkydeveloper.debtsmanager.models.Transaction;
-import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
@@ -95,7 +94,7 @@ public class MainVerticle extends AbstractVerticle {
             .setPassword(config().getString("pg-password", "postgres"))
         );
         String statusPrefix = config().getString("redis-status-prefix", "status:");
-        StatusCacheManager statusCacheManager = StatusCacheManager.create(redisClient, statusPrefix);
+        ReadModelManager statusCacheManager = ReadModelManager.create(redisClient, statusPrefix);
         UserPersistence userPersistence = UserPersistence.create(pgClient);
         TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, statusCacheManager);
         StatusPersistence statusPersistence = StatusPersistence.create(
