@@ -7,7 +7,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.redis.RedisClient;
 
-@DataObject(generateConverter = true)
 public class UpdateStatusAfterTransactionRemoveCommand extends AbstractCommand {
 
   private String transactionId;
@@ -21,16 +20,6 @@ public class UpdateStatusAfterTransactionRemoveCommand extends AbstractCommand {
     this.from = from;
     this.to = to;
     this.value = value;
-  }
-
-  public UpdateStatusAfterTransactionRemoveCommand(JsonObject json) {
-    UpdateStatusAfterTransactionRemoveCommandConverter.fromJson(json, this);
-  }
-
-  public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    UpdateStatusAfterTransactionRemoveCommandConverter.toJson(this, json);
-    return json;
   }
 
   public String getTransactionId() {
@@ -73,8 +62,4 @@ public class UpdateStatusAfterTransactionRemoveCommand extends AbstractCommand {
     return this;
   }
 
-  @Override
-  public void runCommand(RedisClient client, Handler<AsyncResult<Void>> resultHandler) {
-    //TODO
-  }
 }

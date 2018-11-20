@@ -1,15 +1,29 @@
 package io.slinkydeveloper.debtsmanager.readmodel;
 
-import io.vertx.codegen.annotations.VertxGen;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.redis.RedisClient;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
+import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionCreationCommand;
+import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionRemoveCommand;
+import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionUpdateCommand;
+import io.vertx.core.json.JsonObject;
 
-@VertxGen
+@JsonTypeInfo(
+  use = JsonTypeInfo.Id.NAME,
+  include = JsonTypeInfo.As.PROPERTY,
+  property = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = PushNewStatusCommand.class, name = "PushNewStatusCommand"),
+  @JsonSubTypes.Type(value = UpdateStatusAfterTransactionCreationCommand.class, name = "UpdateStatusAfterTransactionCreationCommand"),
+  @JsonSubTypes.Type(value = UpdateStatusAfterTransactionRemoveCommand.class, name = "UpdateStatusAfterTransactionRemoveCommand"),
+  @JsonSubTypes.Type(value = UpdateStatusAfterTransactionUpdateCommand.class, name = "UpdateStatusAfterTransactionUpdateCommand"),
+})
 public interface Command {
 
   String getCommandId();
 
-  void runCommand(RedisClient client, Handler<AsyncResult<Boolean>> resultHandler);
+  default JsonObject toJson() {
+    return JsonObject.mapFrom(this);
+  }
 
 }

@@ -9,7 +9,6 @@ import io.vertx.redis.RedisClient;
 
 import java.util.Map;
 
-@DataObject(generateConverter = true)
 public class PushNewStatusCommand extends AbstractCommand {
 
   private String username;
@@ -21,14 +20,8 @@ public class PushNewStatusCommand extends AbstractCommand {
     this.status = status;
   }
 
-  public PushNewStatusCommand(JsonObject json) {
-    PushNewStatusCommandConverter.fromJson(json, this);
-  }
-
   public JsonObject toJson() {
-    JsonObject json = new JsonObject();
-    PushNewStatusCommandConverter.toJson(this, json);
-    return json;
+    return JsonObject.mapFrom(this);
   }
 
   public String getUsername() {
@@ -49,10 +42,5 @@ public class PushNewStatusCommand extends AbstractCommand {
   public PushNewStatusCommand setStatus(Map<String, Double> status) {
     this.status = status;
     return this;
-  }
-
-  @Override
-  public void runCommand(RedisClient client, Handler<AsyncResult<Boolean>> resultHandler) {
-
   }
 }

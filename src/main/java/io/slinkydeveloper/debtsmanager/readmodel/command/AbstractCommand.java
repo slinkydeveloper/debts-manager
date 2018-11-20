@@ -10,7 +10,7 @@ public abstract class AbstractCommand implements Command {
   private String commandId;
 
   public AbstractCommand(String ...args) {
-    this.commandId = HashUtils.createHash(new String[]{Strings.join(args, ""), String.valueOf(System.currentTimeMillis())});
+    this.commandId = HashUtils.createHash(Strings.join(args, ""), String.valueOf(System.currentTimeMillis()));
   }
 
   @Override

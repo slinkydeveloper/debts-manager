@@ -94,7 +94,7 @@ public class MainVerticle extends AbstractVerticle {
             .setPassword(config().getString("pg-password", "postgres"))
         );
         String statusPrefix = config().getString("redis-status-prefix", "status:");
-        ReadModelManager statusCacheManager = ReadModelManager.create(redisClient, statusPrefix);
+        ReadModelManager statusCacheManager = ReadModelManager.create(redisClient);
         UserPersistence userPersistence = UserPersistence.create(pgClient);
         TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, statusCacheManager);
         StatusPersistence statusPersistence = StatusPersistence.create(

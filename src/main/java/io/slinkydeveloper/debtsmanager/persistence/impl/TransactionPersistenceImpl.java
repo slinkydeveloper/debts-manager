@@ -6,9 +6,16 @@ import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
+import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
+import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionCreationCommand;
+import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionUpdateCommand;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,11 +24,16 @@ import java.util.stream.StreamSupport;
 public class TransactionPersistenceImpl implements TransactionPersistence {
 
   private final PgPool client;
-  private final ReadModelManager statusCacheManager;
+  private final ReadModelManager readModelManager;
 
-  public TransactionPersistenceImpl(PgPool client, ReadModelManager statusCacheManager) {
+  private final static Logger log = LoggerFactory.getLogger(TransactionPersistenceImpl.class);
+  private final static Handler<AsyncResult<Boolean>> READ_MODEL_MANAGER_RESULT_HANDLER = ar -> {
+    if (ar.failed()) log.warn("Unable to update read model", ar.cause());
+  };
+
+  public TransactionPersistenceImpl(PgPool client, ReadModelManager readModelManager) {
     this.client = client;
-    this.statusCacheManager = statusCacheManager;
+    this.readModelManager = readModelManager;
   }
 
   @Override
@@ -53,7 +65,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
       Tuple.of(transaction.getDescription(), from, transaction.getTo(), transaction.getValue()), ar -> {
       if (ar.failed()) fut.fail(ar.cause());
       Transaction t = mapRowToTransaction(ar.result().iterator().next());
-      statusCacheManager.triggerRefreshFromTransactionCreation(from, transaction.getTo(), transaction.getValue());
+      readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), from, transaction.getTo(), transaction.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
       fut.complete(t);
     });
     return fut;
@@ -78,7 +90,11 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
         if (ar.failed()) fut.fail(ar.cause());
         if (updateTransaction.getValue() != null) {
           Transaction oldT = mapRowToTransaction(ar.result().iterator().next());
-          statusCacheManager.triggerRefreshFromTransactionUpdate(oldT.getFrom(), oldT.getTo(), oldT.getValue(), updateTransaction.getValue());
+          readModelManager
+            .runCommand(
+              new UpdateStatusAfterTransactionUpdateCommand(id, oldT.getFrom(), oldT.getTo(), oldT.getValue(), updateTransaction.getValue()).toJson(),
+              READ_MODEL_MANAGER_RESULT_HANDLER
+            );
         }
         fut.complete();
     });
@@ -91,7 +107,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
     client.preparedQuery("DELETE FROM \"transaction\" WHERE id=$1 RETURNING *", Tuple.of(id), ar -> {
         if (ar.failed()) fut.fail(ar.cause());
         Transaction t = mapRowToTransaction(ar.result().iterator().next());
-        statusCacheManager.triggerRefreshFromTransactionRemove(t.getFrom(), t.getTo(), t.getValue());
+      readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), t.getFrom(), t.getTo(), t.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
         fut.complete();
     });
     return fut;

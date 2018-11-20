@@ -1,11 +1,14 @@
 package io.slinkydeveloper.debtsmanager.readmodel.impl;
 
+import io.slinkydeveloper.debtsmanager.readmodel.Command;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.command.*;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import io.vertx.redis.RedisClient;
 import org.slf4j.LoggerFactory;
@@ -17,60 +20,65 @@ import java.util.stream.Collectors;
 public class ReadModelManagerImpl implements ReadModelManager {
 
   private final RedisClient redisClient;
-  private final String updateStatusLuaScript;
 
   private final static Logger log = LoggerFactory.getLogger(ReadModelManager.class);
 
-  public ReadModelManagerImpl(RedisClient redisClient, String updateStatusLuaScript) {
+  public ReadModelManagerImpl(RedisClient redisClient) {
     this.redisClient = redisClient;
-    this.updateStatusLuaScript = updateStatusLuaScript;
+  }
+
+  private Future<Boolean> runUpdateStatusAfterTransactionUpdateCommand(UpdateStatusAfterTransactionUpdateCommand command) {
+    double difference = command.getNewValue() - command.getOldValue();
+    return CompositeFuture.all(
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), difference),
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), -difference)
+    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
+  }
+
+  private Future<Boolean> runUpdateStatusAfterTransactionRemoveCommand(UpdateStatusAfterTransactionRemoveCommand command) {
+    return CompositeFuture.all(
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), -command.getValue()),
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), command.getValue())
+    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
+  }
+
+  private Future<Boolean> runUpdateStatusAfterTransactionCreationCommand(UpdateStatusAfterTransactionCreationCommand command) {
+    return CompositeFuture.all(
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), command.getValue()),
+      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), -command.getValue())
+    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
+  }
+
+  private Future<Boolean> runPushNewStatusCommand(PushNewStatusCommand command) {
+    return DebtsManagerRedisCommands.pushNewStatus(redisClient, command.getUsername(), command.getCommandId(), command.getStatus());
   }
 
   @Override
-  public void triggerRefreshFromTransactionUpdate(String transactionId, String from, String to, double oldValue, double newValue) {
-    double difference = newValue - oldValue;
-    updateCouple(transactionId, from, to, difference, -difference);
+  public void runCommand(JsonObject jsonCommand, Handler<AsyncResult<Boolean>> resultHandler) {
+    Command command = jsonCommand.mapTo(Command.class);
+    Future<Boolean> fut;
+    if (command instanceof PushNewStatusCommand)
+      fut = runPushNewStatusCommand((PushNewStatusCommand) command);
+    else if (command instanceof UpdateStatusAfterTransactionCreationCommand)
+      fut = runUpdateStatusAfterTransactionCreationCommand((UpdateStatusAfterTransactionCreationCommand) command);
+    else if (command instanceof UpdateStatusAfterTransactionRemoveCommand)
+      fut = runUpdateStatusAfterTransactionRemoveCommand((UpdateStatusAfterTransactionRemoveCommand) command);
+    else if (command instanceof UpdateStatusAfterTransactionUpdateCommand)
+      fut = runUpdateStatusAfterTransactionUpdateCommand((UpdateStatusAfterTransactionUpdateCommand) command);
+    else {
+      resultHandler.handle(Future.failedFuture("Command not exists"));
+      return;
+    }
+    fut.setHandler(ar -> {
+      if (ar.failed()) {
+        log.warn("Error during transaction script execution. Maybe because of a race condition?", ar.cause());
+      } else {
+        if (ar.result())
+          log.info("Command completed with true result {}", command);
+        else
+          log.info("Command completed with false result {}", command);
+      }
+      resultHandler.handle(ar);
+    });
   }
-
-  @Override
-  public void triggerRefreshFromTransactionRemove(String transactionId, String from, String to, double value) {
-    updateCouple(transactionId, from, to, -value, value);
-  }
-
-  @Override
-  public void triggerRefreshFromTransactionCreation(String transactionId, String from, String to, double value) {
-    updateCouple(transactionId, from, to, value, -value);
-  }
-
-  public void updateCouple(String transactionid, String from, String to, double fromToValue, double toFromValue) {
-    this.redisClient(statusPrefix + from, to, fromToValue, updateResultHandler);
-    this.redisClient.hincrbyfloat(statusPrefix + to, from, toFromValue, updateResultHandler);
-    //TODO update with lua script use redisClient.evalScript()
-  }
-
-  @Override
-  public void pushStatusCache(String username, Map<String, Double> status) {
-    CompositeFuture //TODO update with transaction WATCH statusPrefix + username REMOVE and HSET
-      .all(status.entrySet().stream().map(e -> futHset(statusPrefix + username, e.getKey(), e.getValue().toString())).collect(Collectors.toList()))
-      .setHandler(ar -> {
-        if (ar.failed()) log.error("Error pushing status cache to redis\n" + Arrays.deepToString(ar.cause().getStackTrace()));
-      });
-  }
-
-  private Future<Long> futHset(String key, String field, String value) {
-    Future<Long> fut = Future.succeededFuture();
-    this.redisClient.hset(key, field, value, fut.completer());
-    return fut;
-  }
-
-  private Handler<AsyncResult<JsonArray>> updateResultHandler(String transactionId) {
-    return ar -> {
-      if (ar.failed()) log.warn("Error during transaction update script execution. Maybe because of a race condition?", ar.cause());
-      if (ar.result().getInteger(0) == 1)
-        log.info("Successfully updated status read model from transaction {}", transactionId);
-      else
-        log.info("Model was already updated {}", transactionId);
-    };
-  }
-
 }

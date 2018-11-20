@@ -18,8 +18,8 @@ public interface TransactionPersistence {
   Future<Void> updateTransaction(String id, UpdateTransaction transaction);
   Future<Void> removeTransaction(String id);
 
-  static TransactionPersistence create(PgPool client, ReadModelManager statusCacheManager) {
-    return new TransactionPersistenceImpl(client, statusCacheManager);
+  static TransactionPersistence create(PgPool client, ReadModelManager readModelManager) {
+    return new TransactionPersistenceImpl(client, readModelManager);
   }
 
 }
