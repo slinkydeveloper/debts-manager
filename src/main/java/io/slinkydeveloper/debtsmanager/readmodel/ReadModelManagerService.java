@@ -1,6 +1,7 @@
 package io.slinkydeveloper.debtsmanager.readmodel;
 
 import io.slinkydeveloper.debtsmanager.readmodel.impl.ReadModelManagerImpl;
+import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
@@ -19,7 +20,7 @@ public interface ReadModelManagerService {
     return new ReadModelManagerImpl(redisClient);
   }
 
-  static ReadModelManagerService createProxy(Vertx vertx, String address) {
-    return new ReadModelManagerVertxEBProxy(vertx, address);
+  static ReadModelManagerService createClient(Vertx vertx, String address, CircuitBreaker circuitBreaker) {
+    return new ReadModelManagerServiceClient(new ReadModelManagerVertxEBProxy(vertx, address), circuitBreaker);
   }
 }

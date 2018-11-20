@@ -9,6 +9,8 @@ import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
+import io.vertx.circuitbreaker.CircuitBreaker;
+import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -94,7 +96,16 @@ public class MainVerticle extends AbstractVerticle {
             .setPassword(config().getString("pg-password", "postgres"))
         );
         String statusPrefix = config().getString("redis-status-prefix", "status:");
-        ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createProxy(vertx, "read_model_manager.debts_manager");
+        CircuitBreaker readModelManagerCircuitBreaker = CircuitBreaker.create(
+          "read-model-manager",
+          vertx,
+          new CircuitBreakerOptions()
+            .setMaxFailures(5)
+            .setMaxRetries(5)
+            .setTimeout(2000)
+            .setResetTimeout(10000)
+        );
+        ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createClient(vertx, "read_model_manager.debts_manager", readModelManagerCircuitBreaker);
         UserPersistence userPersistence = UserPersistence.create(pgClient);
         TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerProxy);
         StatusPersistence statusPersistence = StatusPersistence.create(
