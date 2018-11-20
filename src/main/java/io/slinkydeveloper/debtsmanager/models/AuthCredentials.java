@@ -54,7 +54,7 @@ public class AuthCredentials {
   }
 
   @GenIgnore @Fluent public AuthCredentials hashPassword() {
-    this.setPassword(HashUtils.createHash(new String[]{this.getPassword()}));
+    this.setPassword(HashUtils.createHash(this.getPassword()));
     return this;
   }
 }
