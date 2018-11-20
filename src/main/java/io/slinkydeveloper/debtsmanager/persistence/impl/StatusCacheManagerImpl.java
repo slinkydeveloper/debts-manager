@@ -1,33 +1,29 @@
 package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
-import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
+import io.slinkydeveloper.debtsmanager.readmodel.impl.DebtsManagerRedisCommands;
+import io.slinkydeveloper.debtsmanager.utils.HashUtils;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import io.vertx.redis.RedisClient;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class StatusCacheManagerImpl implements StatusCacheManager {
 
   private final RedisClient redisClient;
-  private final String statusPrefix;
 
   private final static Logger log = LoggerFactory.getLogger(StatusCacheManager.class);
 
-  private final Handler<AsyncResult<String>> updateResultHandler = ar -> {
-    if (ar.failed()) log.warn("Error getting status from db\n" + Arrays.deepToString(ar.cause().getStackTrace()));
+  private final Handler<AsyncResult<Boolean>> redisScriptsResultHandler = ar -> {
+    if (ar.failed()) log.warn("Error getting status from db", ar.cause());
+    else if (!ar.result()) log.info("Update script cannot update status");
   };
 
-  public StatusCacheManagerImpl(RedisClient redisClient, String statusPrefix) {
+  public StatusCacheManagerImpl(RedisClient redisClient) {
     this.redisClient = redisClient;
-    this.statusPrefix = statusPrefix;
   }
 
   @Override
@@ -47,23 +43,30 @@ public class StatusCacheManagerImpl implements StatusCacheManager {
   }
 
   public void updateCouple(String from, String to, double fromToValue, double toFromValue) {
-    this.redisClient.hincrbyfloat(statusPrefix + from, to, fromToValue, updateResultHandler);
-    this.redisClient.hincrbyfloat(statusPrefix + to, from, toFromValue, updateResultHandler);
+    DebtsManagerRedisCommands.updateTransaction(
+      redisClient,
+      from,
+      HashUtils.createHash(from, to, String.valueOf(fromToValue), String.valueOf(System.currentTimeMillis())),
+      to,
+      fromToValue
+    ).setHandler(redisScriptsResultHandler);
+    DebtsManagerRedisCommands.updateTransaction(
+      redisClient,
+      to,
+      HashUtils.createHash(to, from, String.valueOf(toFromValue), String.valueOf(System.currentTimeMillis())),
+      from,
+      toFromValue
+    ).setHandler(redisScriptsResultHandler);
   }
 
   @Override
-  public void pushStatusCache(String username, Map<String, Double> status) {
-    CompositeFuture
-      .all(status.entrySet().stream().map(e -> futHset(statusPrefix + username, e.getKey(), e.getValue().toString())).collect(Collectors.toList()))
-      .setHandler(ar -> {
-        if (ar.failed()) log.error("Error pushing status cache to redis\n" + Arrays.deepToString(ar.cause().getStackTrace()));
-      });
-  }
-
-  private Future<Long> futHset(String key, String field, String value) {
-    Future<Long> fut = Future.succeededFuture();
-    this.redisClient.hset(key, field, value, fut.completer());
-    return fut;
+  public void pushNewStatusCache(String username, Map<String, Double> status) {
+    DebtsManagerRedisCommands.pushNewStatus(
+      redisClient,
+      username,
+      HashUtils.createHash(username, status.toString(), String.valueOf(System.currentTimeMillis())),
+      status
+    ).setHandler(redisScriptsResultHandler);
   }
 
 }

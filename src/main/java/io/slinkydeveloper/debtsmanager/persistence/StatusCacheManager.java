@@ -5,15 +5,16 @@ import io.vertx.redis.RedisClient;
 
 import java.util.Map;
 
+@Deprecated
 public interface StatusCacheManager {
 
   void triggerRefreshFromTransactionUpdate(String from, String to, double oldValue, double newValue);
   void triggerRefreshFromTransactionRemove(String from, String to, double value);
   void triggerRefreshFromTransactionCreation(String from, String to, double value);
-  void pushStatusCache(String username, Map<String, Double> status);
+  void pushNewStatusCache(String username, Map<String, Double> status);
 
-  static StatusCacheManager create(RedisClient redisClient, String statusPrefix) {
-    return new StatusCacheManagerImpl(redisClient, statusPrefix);
+  static StatusCacheManager create(RedisClient redisClient) {
+    return new StatusCacheManagerImpl(redisClient);
   }
 
 }
