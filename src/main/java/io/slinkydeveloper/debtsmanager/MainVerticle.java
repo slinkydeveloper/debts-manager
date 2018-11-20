@@ -3,7 +3,7 @@ package io.slinkydeveloper.debtsmanager;
 import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
-import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
@@ -94,7 +94,7 @@ public class MainVerticle extends AbstractVerticle {
             .setPassword(config().getString("pg-password", "postgres"))
         );
         String statusPrefix = config().getString("redis-status-prefix", "status:");
-        ReadModelManager readModelManagerProxy = ReadModelManager.createProxy(vertx, "read_model_manager.debts_manager");
+        ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createProxy(vertx, "read_model_manager.debts_manager");
         UserPersistence userPersistence = UserPersistence.create(pgClient);
         TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerProxy);
         StatusPersistence statusPersistence = StatusPersistence.create(
@@ -145,11 +145,11 @@ public class MainVerticle extends AbstractVerticle {
         .setAddress("users.debts_manager")
         .register(UsersService.class, usersService)
     );
-    ReadModelManager readModelManager = ReadModelManager.create(redisClient);
+    ReadModelManagerService readModelManager = ReadModelManagerService.create(redisClient);
     registeredConsumers.add(
       serviceBinder
         .setAddress("read_model_manager.debts_manager")
-        .register(ReadModelManager.class, readModelManager)
+        .register(ReadModelManagerService.class, readModelManager)
     );
   }
 

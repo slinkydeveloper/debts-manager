@@ -6,8 +6,7 @@ import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
-import io.slinkydeveloper.debtsmanager.persistence.StatusCacheManager;
-import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionCreationCommand;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionUpdateCommand;
@@ -24,14 +23,14 @@ import java.util.stream.StreamSupport;
 public class TransactionPersistenceImpl implements TransactionPersistence {
 
   private final PgPool client;
-  private final ReadModelManager readModelManager;
+  private final ReadModelManagerService readModelManager;
 
   private final static Logger log = LoggerFactory.getLogger(TransactionPersistenceImpl.class);
   private final static Handler<AsyncResult<Boolean>> READ_MODEL_MANAGER_RESULT_HANDLER = ar -> {
     if (ar.failed()) log.warn("Unable to update read model", ar.cause());
   };
 
-  public TransactionPersistenceImpl(PgPool client, ReadModelManager readModelManager) {
+  public TransactionPersistenceImpl(PgPool client, ReadModelManagerService readModelManager) {
     this.client = client;
     this.readModelManager = readModelManager;
   }

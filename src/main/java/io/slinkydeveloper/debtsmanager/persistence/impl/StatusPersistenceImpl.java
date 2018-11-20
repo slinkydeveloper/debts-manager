@@ -3,7 +3,7 @@ package io.slinkydeveloper.debtsmanager.persistence.impl;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
-import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.vertx.core.AsyncResult;
@@ -27,7 +27,7 @@ public class StatusPersistenceImpl implements StatusPersistence {
   private final String buildStatusQuery;
   private final String buildStatusBeforeQuery;
 
-  private final ReadModelManager readModelManager;
+  private final ReadModelManagerService readModelManager;
 
   private final static Logger log = LoggerFactory.getLogger(StatusPersistenceImpl.class);
   private final static Handler<AsyncResult<Boolean>> READ_MODEL_MANAGER_RESULT_HANDLER = ar -> {
@@ -39,7 +39,7 @@ public class StatusPersistenceImpl implements StatusPersistence {
     row -> row.getDouble("total")
   );
 
-  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManager readModelManager) {
+  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManagerService readModelManager) {
     this.redisClient = redisClient;
     this.pgClient = pgClient;
     this.statusPrefix = statusPrefix;

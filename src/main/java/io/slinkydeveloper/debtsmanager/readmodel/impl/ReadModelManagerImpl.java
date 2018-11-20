@@ -1,27 +1,22 @@
 package io.slinkydeveloper.debtsmanager.readmodel.impl;
 
 import io.slinkydeveloper.debtsmanager.readmodel.Command;
-import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.*;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import io.vertx.redis.RedisClient;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-public class ReadModelManagerImpl implements ReadModelManager {
+public class ReadModelManagerImpl implements ReadModelManagerService {
 
   private final RedisClient redisClient;
 
-  private final static Logger log = LoggerFactory.getLogger(ReadModelManager.class);
+  private final static Logger log = LoggerFactory.getLogger(ReadModelManagerService.class);
 
   public ReadModelManagerImpl(RedisClient redisClient) {
     this.redisClient = redisClient;

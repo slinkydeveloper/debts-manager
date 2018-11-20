@@ -5,7 +5,7 @@ import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
 import io.slinkydeveloper.debtsmanager.persistence.impl.TransactionPersistenceImpl;
-import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManager;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.vertx.core.Future;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public interface TransactionPersistence {
   Future<Void> updateTransaction(String id, UpdateTransaction transaction);
   Future<Void> removeTransaction(String id);
 
-  static TransactionPersistence create(PgPool client, ReadModelManager readModelManager) {
+  static TransactionPersistence create(PgPool client, ReadModelManagerService readModelManager) {
     return new TransactionPersistenceImpl(client, readModelManager);
   }
 
