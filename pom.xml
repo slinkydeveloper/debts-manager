@@ -8,7 +8,7 @@
   <name>Debts_Manager_API</name>
 
   <properties>
-    <vertx.version>3.6.0.CR1</vertx.version>
+    <vertx.version>3.6.0-SNAPSHOT</vertx.version>
     <vertx-maven-plugin.version>1.0.18</vertx-maven-plugin.version>
     <vertx.verticle>io.slinkydeveloper.debtsmanager.MainVerticle</vertx.verticle>
     <junit5.version>5.3.1</junit5.version>
@@ -19,6 +19,12 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
       <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codegen</artifactId>
+      <version>${vertx.version}</version>
+      <classifier>processor</classifier>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -37,20 +43,8 @@
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-web-api-service</artifactId>
-      <version>${vertx.version}</version>
-      <classifier>processor</classifier>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
       <artifactId>vertx-web</artifactId>
       <version>${vertx.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-codegen</artifactId>
-      <version>${vertx.version}</version>
-      <classifier>processor</classifier>
     </dependency>
     <dependency>
       <groupId>io.vertx</groupId>
@@ -131,8 +125,8 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>9</source>
-          <target>9</target>
+          <source>11</source>
+          <target>11</target>
         </configuration>
       </plugin>
     </plugins>
