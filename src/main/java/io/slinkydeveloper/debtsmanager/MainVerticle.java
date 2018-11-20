@@ -94,20 +94,20 @@ public class MainVerticle extends AbstractVerticle {
             .setPassword(config().getString("pg-password", "postgres"))
         );
         String statusPrefix = config().getString("redis-status-prefix", "status:");
-        ReadModelManager statusCacheManager = ReadModelManager.create(redisClient);
+        ReadModelManager readModelManagerProxy = ReadModelManager.createProxy(vertx, "read_model_manager.debts_manager");
         UserPersistence userPersistence = UserPersistence.create(pgClient);
-        TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, statusCacheManager);
+        TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerProxy);
         StatusPersistence statusPersistence = StatusPersistence.create(
           redisClient,
           pgClient,
           statusPrefix,
           ar.result().resultAt(1).toString(),
           ar.result().resultAt(2).toString(),
-          statusCacheManager
+          readModelManagerProxy
         );
         JsonObject jwkObject = ((Buffer)ar.result().resultAt(0)).toJsonObject();
         JWTAuth auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(jwkObject));
-        startServices(userPersistence, transactionPersistence, statusPersistence, auth);
+        startServices(userPersistence, transactionPersistence, statusPersistence, redisClient, auth);
         startHttpServer(auth).setHandler(future.completer());
       }
     });
@@ -128,7 +128,7 @@ public class MainVerticle extends AbstractVerticle {
     return fut;
   }
 
-  private void startServices(UserPersistence userPersistence, TransactionPersistence transactionPersistence, StatusPersistence statusPersistence, JWTAuth auth) {
+  private void startServices(UserPersistence userPersistence, TransactionPersistence transactionPersistence, StatusPersistence statusPersistence, RedisClient redisClient, JWTAuth auth) {
     serviceBinder = new ServiceBinder(vertx);
 
     registeredConsumers = new ArrayList<>();
@@ -144,6 +144,12 @@ public class MainVerticle extends AbstractVerticle {
       serviceBinder
         .setAddress("users.debts_manager")
         .register(UsersService.class, usersService)
+    );
+    ReadModelManager readModelManager = ReadModelManager.create(redisClient);
+    registeredConsumers.add(
+      serviceBinder
+        .setAddress("read_model_manager.debts_manager")
+        .register(ReadModelManager.class, readModelManager)
     );
   }
 
