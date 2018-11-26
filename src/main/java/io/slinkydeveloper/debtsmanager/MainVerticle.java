@@ -51,7 +51,10 @@ public class MainVerticle extends AbstractVerticle {
         OpenAPI3RouterFactory routerFactory = openAPI3RouterFactoryAsyncResult.result();
 
         // Enable automatic response when ValidationException is thrown
-        routerFactory.setOptions(new RouterFactoryOptions().setMountValidationFailureHandler(true).addGlobalHandler(LoggerHandler.create()));
+        routerFactory.setOptions(new RouterFactoryOptions().setMountValidationFailureHandler(true));
+
+        // Add gloabl handler
+        routerFactory.addGlobalHandler(LoggerHandler.create());
 
         // Mount services on event bus based on extensions
         routerFactory.mountServicesFromExtensions();

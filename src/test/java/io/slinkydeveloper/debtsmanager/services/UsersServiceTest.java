@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.slinkydeveloper.debtsmanager.services.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,12 +56,15 @@ public class UsersServiceTest extends BaseServicesTest {
   }
 
   @BeforeEach
-  public void before(VertxTestContext testContext) {
-    wipeDb(pgClient, testContext);
-    registerBeforeTestLogin(new AuthCredentials("francesco", "francesco"), testContext).setHandler(ar -> {
+  public void before(Vertx vertx, VertxTestContext testContext) throws InterruptedException {
+    testContext.assertComplete(
+      wipeDb(pgClient)
+        .compose(v -> registerBeforeTestLogin(new AuthCredentials("francesco", "francesco"),  testContext))
+    ).setHandler(ar -> {
       loggedContext = new OperationRequest().setUser(new JsonObject().put("username", "francesco"));
       testContext.completeNow();
     });
+    testContext.awaitCompletion(1000, TimeUnit.MILLISECONDS);
   }
 
   @Test

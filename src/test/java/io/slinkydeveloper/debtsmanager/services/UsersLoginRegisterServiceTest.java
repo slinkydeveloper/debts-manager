@@ -49,7 +49,7 @@ public class UsersLoginRegisterServiceTest extends BaseServicesTest {
 
   @BeforeEach
   public void before(VertxTestContext testContext) {
-    wipeDb(pgClient, testContext);
+    wipeDb(pgClient).setHandler(testContext.succeeding(v -> testContext.completeNow()));
   }
 
   @Test

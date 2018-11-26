@@ -1,6 +1,8 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgRowSet;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationResponse;
@@ -11,12 +13,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestUtils {
 
-  public static void wipeDb(PgPool pgClient, VertxTestContext testContext) {
-    pgClient.query("TRUNCATE \"user\", \"userrelationship\", \"transaction\"", testContext.succeeding(r -> testContext.completeNow()));
+  public static Future<Void> wipeDb(PgPool pgClient) {
+    Future<PgRowSet> fut = Future.future();
+    pgClient.query("TRUNCATE \"user\", \"userrelationship\", \"transaction\"", fut.completer());
+    return fut.map(p -> null);
   }
 
-  public static void wipeRedis(RedisClient redisClient, VertxTestContext testContext) {
-    redisClient.flushdb(testContext.succeeding(r -> testContext.completeNow()));
+  public static Future<Void> wipeRedis(RedisClient redisClient) {
+    Future<String> fut = Future.future();
+    redisClient.flushdb(fut.completer());
+    return fut.map(p -> null);
   }
 
   public static void assertSuccessResponse(OperationResponse actual) {

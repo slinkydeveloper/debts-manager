@@ -23,6 +23,6 @@ public class BaseServicesTest extends BaseTestWithEnvironment {
       });
       fut.complete(operationResponse.getPayload().toString());
     }));
-    return test.assertComplete(fut);
+    return fut;
   }
 }

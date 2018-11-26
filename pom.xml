@@ -8,7 +8,7 @@
   <name>Debts_Manager_API</name>
 
   <properties>
-    <vertx.version>3.6.0.CR1</vertx.version>
+    <vertx.version>3.6.0-SNAPSHOT</vertx.version>
     <vertx-maven-plugin.version>1.0.18</vertx-maven-plugin.version>
     <vertx.verticle>io.slinkydeveloper.debtsmanager.MainVerticle</vertx.verticle>
     <junit5.version>5.3.1</junit5.version>
@@ -107,6 +107,9 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.22.0</version>
+        <configuration>
+          <trimStackTrace>false</trimStackTrace>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>io.reactiverse</groupId>

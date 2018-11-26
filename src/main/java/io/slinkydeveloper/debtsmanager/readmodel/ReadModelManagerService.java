@@ -21,6 +21,6 @@ public interface ReadModelManagerService {
   }
 
   static ReadModelManagerService createClient(Vertx vertx, String address, CircuitBreaker circuitBreaker) {
-    return new ReadModelManagerServiceClient(new ReadModelManagerVertxEBProxy(vertx, address), circuitBreaker);
+    return new ReadModelManagerServiceClient(new ReadModelManagerServiceVertxEBProxy(vertx, address), circuitBreaker);
   }
 }

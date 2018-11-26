@@ -9,18 +9,22 @@ import org.slf4j.LoggerFactory;
 
 public class ReadModelManagerServiceClient implements ReadModelManagerService {
 
-  private final ReadModelManagerVertxEBProxy proxy;
+  private final ReadModelManagerServiceVertxEBProxy delegate;
   private final CircuitBreaker circuitBreaker;
 
   private final static Logger log = LoggerFactory.getLogger(ReadModelManagerServiceClient.class);
 
-  public ReadModelManagerServiceClient(ReadModelManagerVertxEBProxy proxy, CircuitBreaker circuitBreaker) {
-    this.proxy = proxy;
+  public ReadModelManagerServiceClient(ReadModelManagerServiceVertxEBProxy delegate, CircuitBreaker circuitBreaker) {
+    this.delegate = delegate;
     this.circuitBreaker = circuitBreaker;
   }
 
   @Override
   public void runCommand(JsonObject command, Handler<AsyncResult<Boolean>> resultHandler) {
-    circuitBreaker.<Boolean>execute(fut -> proxy.runCommand(command, fut.completer())).setHandler(resultHandler::handle);
+    circuitBreaker.<Boolean>execute(fut -> delegate.runCommand(command, fut.completer())).setHandler(resultHandler::handle);
+  }
+
+  public ReadModelManagerServiceVertxEBProxy getDelegate() {
+    return delegate;
   }
 }
