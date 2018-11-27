@@ -7,13 +7,16 @@ import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
+import io.slinkydeveloper.debtsmanager.persistence.impl.StatusUtils;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
+import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.vertx.core.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.redis.RedisClient;
@@ -24,6 +27,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -92,6 +97,8 @@ public class TransactionsServiceTest extends BaseServicesTest {
 
   @Test
   public void createTransaction(VertxTestContext test) throws InterruptedException {
+    Checkpoint statusCheck = test.checkpoint();
+    Checkpoint commandsCheck = test.checkpoint();
     pgClient.preparedQuery(
       "INSERT INTO \"user\" (username, password) VALUES ($1, $2)",
       Tuple.of("slinky", "slinky"), test.succeeding(rows ->
@@ -110,7 +117,14 @@ public class TransactionsServiceTest extends BaseServicesTest {
                   assertEquals(20, transaction.getValue());
                   assertEquals("test", transaction.getDescription());
                 });
-                test.completeNow();
+                redisClient.exists("status:francesco", test.succeeding(l -> {
+                  test.verify(() -> assertEquals(0, l.longValue()));
+                  statusCheck.flag();
+                }));
+                redisClient.exists("commands:francesco", test.succeeding(l -> {
+                  test.verify(() -> assertEquals(0, l.longValue()));
+                  commandsCheck.flag();
+                }));
               })
             );
           })
@@ -122,6 +136,8 @@ public class TransactionsServiceTest extends BaseServicesTest {
 
   @Test
   public void createTransactionFailForMissingRelationship(VertxTestContext test) {
+    Checkpoint statusCheck = test.checkpoint();
+    Checkpoint commandsCheck = test.checkpoint();
     pgClient.preparedQuery(
       "INSERT INTO \"user\" (username, password) VALUES ($1, $2)",
       Tuple.of("slinky", "slinky"), test.succeeding(rows ->
@@ -136,13 +152,76 @@ public class TransactionsServiceTest extends BaseServicesTest {
                   assertEquals("Forbidden", res.getStatusMessage());
                   assertEquals("You need slinky authorization to add a new transaction with him as recipient",  res.getPayload().toString());
                 });
-                test.completeNow();
+                redisClient.exists("status:francesco", test.succeeding(l -> {
+                  test.verify(() -> assertEquals(0, l.longValue()));
+                  statusCheck.flag();
+                }));
+                redisClient.exists("commands:francesco", test.succeeding(l -> {
+                  test.verify(() -> assertEquals(0, l.longValue()));
+                  commandsCheck.flag();
+                }));
               })
             );
           })
         )
       )
     );
+  }
+
+  @Test
+  public void createTransactionAndUpdateStatus(Vertx vertx, VertxTestContext test) throws InterruptedException {
+    Checkpoint statusFrancescoCheck = test.checkpoint();
+    Checkpoint commandsFrancescoCheck = test.checkpoint();
+    Checkpoint statusSlinkyCheck = test.checkpoint();
+    Checkpoint commandsSlinkyCheck = test.checkpoint();
+    Map<String, Double> fakeStatus = new HashMap<>();
+    fakeStatus.put("fake", 10d);
+    test.assertComplete(CompositeFuture.all(
+      TestUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("slinky", fakeStatus).toJson(), h)),
+      TestUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("francesco", fakeStatus).toJson(), h)),
+      TestUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
+        .compose(r -> TestUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)", Tuple.of("francesco", "slinky"), h)))
+    )).setHandler(ar -> {
+      NewTransaction transactionBody = new NewTransaction("slinky", +20, "test");
+      transactionsService.createTransaction(transactionBody, loggedContext, test.succeeding(res -> {
+          test.verify(() -> {
+            assertSuccessResponse("application/json", res);
+            Transaction transaction = new Transaction(res.getPayload().toJsonObject());
+            assertNotNull(transaction.getId());
+            assertNotNull(transaction.getAt());
+            assertEquals("francesco",  transaction.getFrom());
+            assertEquals("slinky", transaction.getTo());
+            assertEquals(20, transaction.getValue());
+            assertEquals("test", transaction.getDescription());
+          });
+          vertx.setTimer(500, l -> {
+            redisClient.hgetall("status:francesco", test.succeeding(o -> {
+              test.verify(() -> {
+                assertEquals(2, o.size());
+                assertEquals(20, StatusUtils.mapToStatusMap(o).get("slinky").doubleValue());
+              });
+              statusFrancescoCheck.flag();
+            }));
+            redisClient.smembers("commands:francesco", test.succeeding(a -> {
+              test.verify(() -> assertEquals(2, a.size()));
+              commandsFrancescoCheck.flag();
+            }));
+            redisClient.hgetall("status:slinky", test.succeeding(o -> {
+              test.verify(() -> {
+                assertEquals(2, o.size());
+                assertEquals(-20, StatusUtils.mapToStatusMap(o).get("francesco").doubleValue());
+              });
+              statusSlinkyCheck.flag();
+            }));
+            redisClient.smembers("commands:slinky", test.succeeding(a -> {
+              test.verify(() -> assertEquals(2, a.size()));
+              commandsSlinkyCheck.flag();
+            }));
+          });
+        })
+      );
+    });
+    test.awaitCompletion(2000, TimeUnit.MILLISECONDS);
   }
 
 }

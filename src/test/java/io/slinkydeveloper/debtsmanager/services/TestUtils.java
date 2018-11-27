@@ -2,12 +2,16 @@ package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgRowSet;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationResponse;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.redis.RedisClient;
+
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -55,6 +59,12 @@ public class TestUtils {
     assertEquals(expectedStatusMessage, actual.getStatusMessage());
     assertEquals("application/json", actual.getHeaders().get("content-type"));
     assertEquals(expectedResult, actual.getPayload().toJsonArray());
+  }
+
+  public static <T> Future<T> futurify(Consumer<Handler<AsyncResult<T>>> c) {
+    Future<T> f = Future.future();
+    c.accept(f.completer());
+    return f;
   }
 
 }
