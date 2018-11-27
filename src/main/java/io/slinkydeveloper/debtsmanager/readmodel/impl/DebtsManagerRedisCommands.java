@@ -21,8 +21,8 @@ public class DebtsManagerRedisCommands {
 
   static {
     try {
-      updateTransactionScript = Script.create(Strings.join(Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/update_transaction.lua").toURI())), "\n"));
-      pushStatusScript = Script.create(Strings.join(Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/push_status.lua").toURI())), "\n"));
+      updateTransactionScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/update_transaction.lua").toURI()))));
+      pushStatusScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/push_status.lua").toURI()))));
     } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }

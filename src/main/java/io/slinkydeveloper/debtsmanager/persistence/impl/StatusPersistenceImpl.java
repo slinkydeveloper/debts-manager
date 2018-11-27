@@ -1,6 +1,7 @@
 package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgPreparedQuery;
 import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
@@ -13,6 +14,10 @@ import io.vertx.redis.RedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
@@ -21,11 +26,20 @@ import java.util.stream.Collectors;
 
 public class StatusPersistenceImpl implements StatusPersistence {
 
+  private static String buildStatusQuery;
+  private static String buildStatusBeforeQuery;
+
+  static {
+    try {
+      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getResource("sql/build_status_query.sql").toURI())));
+      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getResource("sql/build_status_before_query.sql").toURI())));
+    } catch (IOException | URISyntaxException e) {
+      e.printStackTrace();
+    }
+  }
+
   private final RedisClient redisClient;
   private final PgPool pgClient;
-  private final String statusPrefix;
-  private final String buildStatusQuery;
-  private final String buildStatusBeforeQuery;
 
   private final ReadModelManagerService readModelManager;
 
@@ -39,12 +53,9 @@ public class StatusPersistenceImpl implements StatusPersistence {
     row -> row.getDouble("total")
   );
 
-  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManagerService readModelManager) {
+  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
     this.redisClient = redisClient;
     this.pgClient = pgClient;
-    this.statusPrefix = statusPrefix;
-    this.buildStatusQuery = buildStatusQuery;
-    this.buildStatusBeforeQuery = buildStatusBeforeQuery;
     this.readModelManager = readModelManager;
   }
 
@@ -68,7 +79,7 @@ public class StatusPersistenceImpl implements StatusPersistence {
   @Override
   public Future<Map<String, Double>> getStatusFromCache(String username) {
     Future<Map<String, Double>> future = Future.future();
-    redisClient.hgetall(statusPrefix + username, ar -> {
+    redisClient.hgetall("status:" + username, ar -> {
       if (ar.failed()) future.fail(ar.cause());
       Map<String, Double> status = StatusUtils.mapToStatusMap(ar.result());
       future.complete(status);

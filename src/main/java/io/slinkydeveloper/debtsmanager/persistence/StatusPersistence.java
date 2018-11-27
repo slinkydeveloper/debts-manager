@@ -16,8 +16,8 @@ public interface StatusPersistence {
   Future<Map<String, Double>> getStatusFromDb(String username);
   Future<Map<String, Double>> getStatusTill(String username, ZonedDateTime time);
 
-  static StatusPersistence create(RedisClient redisClient, PgPool pgClient, String statusPrefix, String buildStatusQuery, String buildStatusBeforeQuery, ReadModelManagerService readModelManager) {
-    return new StatusPersistenceImpl(redisClient, pgClient, statusPrefix, buildStatusQuery, buildStatusBeforeQuery, readModelManager);
+  static StatusPersistence create(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
+    return new StatusPersistenceImpl(redisClient, pgClient, readModelManager);
   }
 
 }
