@@ -16,6 +16,7 @@ import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -119,7 +120,7 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
       row.getString("to"),
       row.getDouble("value"),
       row.getString("description"),
-      row.getString("at")
+      row.getLocalDateTime("at").toString()
     );
   }
 }

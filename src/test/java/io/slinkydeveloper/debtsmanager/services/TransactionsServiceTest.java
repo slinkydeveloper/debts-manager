@@ -81,16 +81,17 @@ public class TransactionsServiceTest extends BaseServicesTest {
   @BeforeEach
   public void before(Vertx vertx, VertxTestContext testContext) throws InterruptedException {
     testContext.assertComplete(
-        CompositeFuture.all(wipeDb(pgClient), wipeRedis(redisClient))
+        CompositeFuture
+          .all(wipeDb(pgClient), wipeRedis(redisClient))
+          .compose(v -> registerBeforeTestLogin(new AuthCredentials("francesco", "francesco"),  testContext))
     ).setHandler(ar -> {
       loggedContext = new OperationRequest().setUser(new JsonObject().put("username", "francesco"));
       testContext.completeNow();
     });
-    testContext.awaitCompletion(1000, TimeUnit.MILLISECONDS);
   }
 
   @Test
-  public void createTransaction(VertxTestContext test) {
+  public void createTransaction(VertxTestContext test) throws InterruptedException {
     pgClient.preparedQuery(
       "INSERT INTO \"user\" (username, password) VALUES ($1, $2)",
       Tuple.of("slinky", "slinky"), test.succeeding(rows ->
@@ -98,8 +99,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
           "INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)",
           Tuple.of("francesco", "slinky"), test.succeeding(insert2Result -> {
             NewTransaction transactionBody = new NewTransaction("slinky", +20, "test");
-            transactionsService.createTransaction(
-              transactionBody, loggedContext, test.succeeding(res -> {
+            transactionsService.createTransaction(transactionBody, loggedContext, test.succeeding(res -> {
                 test.verify(() -> {
                   assertSuccessResponse("application/json", res);
                   Transaction transaction = new Transaction(res.getPayload().toJsonObject());
@@ -117,6 +117,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
         )
       )
     );
+    test.awaitCompletion(1000, TimeUnit.MILLISECONDS);
   }
 
   @Test

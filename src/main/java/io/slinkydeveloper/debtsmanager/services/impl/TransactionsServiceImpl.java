@@ -50,7 +50,7 @@ public class TransactionsServiceImpl implements TransactionsService {
       else
         transactionPersistence.newTransaction(body, context.getUser().getString("username")).setHandler(newAr -> {
           if (newAr.failed()) resultHandler.handle(Future.failedFuture(newAr.cause()));
-          resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(newAr.result().toJson())));
+          else resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(newAr.result().toJson())));
         });
     });
   }

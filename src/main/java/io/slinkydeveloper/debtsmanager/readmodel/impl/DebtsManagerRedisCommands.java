@@ -21,15 +21,15 @@ public class DebtsManagerRedisCommands {
 
   static {
     try {
-      updateTransactionScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/update_transaction.lua").toURI()))));
-      pushStatusScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getResource("redis_lua/push_status.lua").toURI()))));
+      updateTransactionScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getClassLoader().getResource("redis_lua/update_transaction.lua").toURI()))));
+      pushStatusScript = Script.create(String.join("\n", Files.readAllLines(Paths.get(DebtsManagerRedisCommands.class.getClassLoader().getResource("redis_lua/push_status.lua").toURI()))));
     } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }
   }
 
   public static Future<Boolean> updateTransaction(RedisClient redisClient, String username, String command_id, String username_to, double value) {
-    Future<Boolean> fut = Future.succeededFuture();
+    Future<Boolean> fut = Future.future();
     redisClient.evalScript(updateTransactionScript, List.of(username, command_id, username_to, String.valueOf(value)), List.of(), ar -> {
       if (ar.succeeded()) fut.complete(ar.result().getInteger(0) == 1);
       else fut.fail(ar.cause());
@@ -38,7 +38,7 @@ public class DebtsManagerRedisCommands {
   }
 
   public static Future<Boolean> pushNewStatus(RedisClient redisClient, String username, String command_id, Map<String, Double> status) {
-    Future<Boolean> fut = Future.succeededFuture();
+    Future<Boolean> fut = Future.future();
     redisClient.evalScript(
       pushStatusScript,
       List.of(username, command_id),

@@ -14,6 +14,8 @@ public class UpdateStatusAfterTransactionRemoveCommand extends AbstractCommand {
   private String to;
   private double value;
 
+  public UpdateStatusAfterTransactionRemoveCommand() {}
+
   public UpdateStatusAfterTransactionRemoveCommand(String transactionId, String from, String to, double value) {
     super(transactionId, from, to, String.valueOf(value));
     this.transactionId = transactionId;

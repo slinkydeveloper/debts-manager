@@ -14,6 +14,8 @@ public class PushNewStatusCommand extends AbstractCommand {
   private String username;
   private Map<String, Double> status;
 
+  public PushNewStatusCommand() {}
+
   public PushNewStatusCommand(String username, Map<String, Double> status) {
     super(username, status.toString());
     this.username = username;

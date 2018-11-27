@@ -15,6 +15,8 @@ public class UpdateStatusAfterTransactionUpdateCommand extends AbstractCommand {
   private double oldValue;
   private double newValue;
 
+  public UpdateStatusAfterTransactionUpdateCommand() {}
+
   public UpdateStatusAfterTransactionUpdateCommand(String transactionId, String from, String to, double oldValue, double newValue) {
     super(transactionId, from, to, String.valueOf(oldValue), String.valueOf(newValue));
     this.transactionId = transactionId;
