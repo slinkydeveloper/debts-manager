@@ -31,8 +31,8 @@ public class StatusPersistenceImpl implements StatusPersistence {
 
   static {
     try {
-      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getResource("sql/build_status_query.sql").toURI())));
-      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getResource("sql/build_status_before_query.sql").toURI())));
+      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getClassLoader().getResource("sql/build_status_query.sql").toURI())));
+      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getClassLoader().getResource("sql/build_status_before_query.sql").toURI())));
     } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }

@@ -1,270 +1,147 @@
-//package io.slinkydeveloper.debtsmanager.services;
-//
-//import io.vertx.core.Vertx;
-//import io.vertx.ext.unit.Async;
-//import io.vertx.ext.unit.TestContext;
-//import io.vertx.ext.unit.junit.RunTestOnContext;
-//import io.vertx.ext.unit.junit.VertxUnitRunner;
-//import io.vertx.ext.web.api.*;
-//import org.junit.After;
-//import org.junit.Before;
-//import org.junit.Rule;
-//import org.junit.Test;
-//import org.junit.runner.RunWith;
-//
-//import io.slinkydeveloper.debtsmanager.models.*;
-//
-///**
-// * TransactionsService Test
-// */
-//@RunWith(VertxUnitRunner.class)
-//public class TransactionsServiceTest {
-//
-//  @Rule
-//  public RunTestOnContext rule = new RunTestOnContext();
-//
-//  TransactionsService transactionsService;
-//
-//  @Before
-//  public void before(TestContext context) {
-//    Vertx vertx = rule.vertx();
-//    transactionsService = TransactionsService.create(vertx);
-//    //TODO add some test initialization code like security token retrieval
-//  }
-//
-//  @After
-//  public void after(TestContext context) {
-//    //TODO add some test end code like session destroy
-//  }
-//
-//  @Test
-//  public void getTransactionsTest(TestContext context) {
-//    Async async = context.async(2);
-//
-//    // TODO set parameters for 200 response test
-//    transactionsService.getTransactions(new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(200, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    transactionsService.getTransactions(new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//  @Test
-//  public void createTransactionTest(TestContext context) {
-//    Async async = context.async(2);
-//    NewTransaction body;
-//
-//    // TODO set parameters for 201 response test
-//    body = null;
-//    transactionsService.createTransaction(body, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(201, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    body = null;
-//    transactionsService.createTransaction(body, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//  @Test
-//  public void getTransactionTest(TestContext context) {
-//    Async async = context.async(3);
-//    String transactionId;
-//
-//    // TODO set parameters for 200 response test
-//    transactionId = null;
-//    transactionsService.getTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(200, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    transactionId = null;
-//    transactionsService.getTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 403 response test
-//    transactionId = null;
-//    transactionsService.getTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(403, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//  @Test
-//  public void updateTransactionTest(TestContext context) {
-//    Async async = context.async(3);
-//    String transactionId;
-//    UpdateTransaction body;
-//
-//    // TODO set parameters for 202 response test
-//    transactionId = null;
-//    body = null;
-//    transactionsService.updateTransaction(transactionId, body, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(202, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    transactionId = null;
-//    body = null;
-//    transactionsService.updateTransaction(transactionId, body, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 403 response test
-//    transactionId = null;
-//    body = null;
-//    transactionsService.updateTransaction(transactionId, body, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(403, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//  @Test
-//  public void deleteTransactionTest(TestContext context) {
-//    Async async = context.async(3);
-//    String transactionId;
-//
-//    // TODO set parameters for 204 response test
-//    transactionId = null;
-//    transactionsService.deleteTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(204, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    transactionId = null;
-//    transactionsService.deleteTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 403 response test
-//    transactionId = null;
-//    transactionsService.deleteTransaction(transactionId, new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(403, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//  @Test
-//  public void getUserStatusTest(TestContext context) {
-//    Async async = context.async(2);
-//
-//    // TODO set parameters for 200 response test
-//    transactionsService.getUserStatus(new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(200, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//
-//    // TODO set parameters for 401 response test
-//    transactionsService.getUserStatus(new OperationRequest(), ar -> {
-//      if (ar.succeeded()) {
-//        OperationResponse result = ar.result();
-//        context.assertEquals(401, result.getStatusCode());
-//        //TODO add your asserts
-//      } else {
-//        context.fail("Operation failed with " + ar.cause().toString());
-//      }
-//      async.countDown();
-//    });
-//  }
-//
-//
-//}
+package io.slinkydeveloper.debtsmanager.services;
+
+import io.reactiverse.pgclient.*;
+import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
+import io.slinkydeveloper.debtsmanager.models.NewTransaction;
+import io.slinkydeveloper.debtsmanager.models.Transaction;
+import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
+import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
+import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
+import io.vertx.core.*;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.jwt.JWTAuth;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
+import io.vertx.redis.RedisClient;
+import io.vertx.redis.RedisOptions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+
+import static io.slinkydeveloper.debtsmanager.services.TestUtils.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+/**
+ * UsersService Test
+ */
+@ExtendWith(VertxExtension.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class TransactionsServiceTest extends BaseServicesTest {
+
+  private PgPool pgClient;
+  private RedisClient redisClient;
+  private UserPersistence userPersistence;
+  private TransactionPersistence transactionPersistence;
+  private StatusPersistence statusPersistence;
+  private TransactionsService transactionsService;
+  private ReadModelManagerService readModelManagerService;
+
+  private JWTAuth auth;
+  private OperationRequest loggedContext;
+
+  @Override
+  @BeforeAll
+  public void beforeAll(Vertx vertx, VertxTestContext testContext) throws Exception {
+    super.beforeAll(vertx, testContext);
+    pgClient = PgClient.pool(vertx,
+      new PgPoolOptions()
+        .setPort(environment.getServicePort("postgres", POSTGRESQL_PORT))
+        .setHost(environment.getServiceHost("postgres", POSTGRESQL_PORT))
+        .setDatabase("debts-manager")
+        .setUser("postgres")
+        .setPassword("postgres")
+    );
+    redisClient = RedisClient.create(vertx,
+      new RedisOptions()
+        .setPort(environment.getServicePort("redis", REDIS_PORT))
+        .setHost(environment.getServiceHost("redis", REDIS_PORT))
+    );
+    readModelManagerService = ReadModelManagerService.create(redisClient);
+    userPersistence = UserPersistence.create(pgClient);
+    transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerService);
+    statusPersistence = StatusPersistence.create(redisClient, pgClient, readModelManagerService);
+    transactionsService = TransactionsService.create(vertx, statusPersistence, transactionPersistence, userPersistence);
+    vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
+      auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
+      usersService = UsersService.create(vertx, userPersistence, auth);
+      testContext.completeNow();
+    }));
+  }
+
+  @BeforeEach
+  public void before(Vertx vertx, VertxTestContext testContext) throws InterruptedException {
+    testContext.assertComplete(
+        CompositeFuture.all(wipeDb(pgClient), wipeRedis(redisClient))
+    ).setHandler(ar -> {
+      loggedContext = new OperationRequest().setUser(new JsonObject().put("username", "francesco"));
+      testContext.completeNow();
+    });
+    testContext.awaitCompletion(1000, TimeUnit.MILLISECONDS);
+  }
+
+  @Test
+  public void createTransaction(VertxTestContext test) {
+    pgClient.preparedQuery(
+      "INSERT INTO \"user\" (username, password) VALUES ($1, $2)",
+      Tuple.of("slinky", "slinky"), test.succeeding(rows ->
+        pgClient.preparedQuery(
+          "INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)",
+          Tuple.of("francesco", "slinky"), test.succeeding(insert2Result -> {
+            NewTransaction transactionBody = new NewTransaction("slinky", +20, "test");
+            transactionsService.createTransaction(
+              transactionBody, loggedContext, test.succeeding(res -> {
+                test.verify(() -> {
+                  assertSuccessResponse("application/json", res);
+                  Transaction transaction = new Transaction(res.getPayload().toJsonObject());
+                  assertNotNull(transaction.getId());
+                  assertNotNull(transaction.getAt());
+                  assertEquals("francesco",  transaction.getFrom());
+                  assertEquals("slinky", transaction.getTo());
+                  assertEquals(20, transaction.getValue());
+                  assertEquals("test", transaction.getDescription());
+                });
+                test.completeNow();
+              })
+            );
+          })
+        )
+      )
+    );
+  }
+
+  @Test
+  public void createTransactionFailForMissingRelationship(VertxTestContext test) {
+    pgClient.preparedQuery(
+      "INSERT INTO \"user\" (username, password) VALUES ($1, $2)",
+      Tuple.of("slinky", "slinky"), test.succeeding(rows ->
+        pgClient.preparedQuery(
+          "INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)",
+          Tuple.of("slinky", "francesco"), test.succeeding(insert2Result -> {
+            NewTransaction transactionBody = new NewTransaction("slinky", +20, "test");
+            transactionsService.createTransaction(
+              transactionBody, loggedContext, test.succeeding(res -> {
+                test.verify(() -> {
+                  assertEquals(403, res.getStatusCode().intValue());
+                  assertEquals("Forbidden", res.getStatusMessage());
+                  assertEquals("You need slinky authorization to add a new transaction with him as recipient",  res.getPayload().toString());
+                });
+                test.completeNow();
+              })
+            );
+          })
+        )
+      )
+    );
+  }
+
+}

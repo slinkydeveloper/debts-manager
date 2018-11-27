@@ -78,11 +78,7 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> future) {
     String jwkPath = config().getString("jwkPath", "jwk.json");
-    CompositeFuture.all(
-      loadResource(jwkPath),
-      loadResource("build_status_query.sql"),
-      loadResource("build_status_before_query.sql")
-    ).setHandler(ar -> {
+    loadResource(jwkPath).setHandler(ar -> {
       if (ar.failed()) future.fail(ar.cause());
       else {
         RedisClient redisClient = RedisClient.create(vertx,
@@ -98,7 +94,6 @@ public class MainVerticle extends AbstractVerticle {
             .setUser(config().getString("pg-username", "postgres"))
             .setPassword(config().getString("pg-password", "postgres"))
         );
-        String statusPrefix = config().getString("redis-status-prefix", "status:");
         CircuitBreaker readModelManagerCircuitBreaker = CircuitBreaker.create(
           "read-model-manager",
           vertx,
@@ -114,12 +109,9 @@ public class MainVerticle extends AbstractVerticle {
         StatusPersistence statusPersistence = StatusPersistence.create(
           redisClient,
           pgClient,
-          statusPrefix,
-          ar.result().resultAt(1).toString(),
-          ar.result().resultAt(2).toString(),
           readModelManagerProxy
         );
-        JsonObject jwkObject = ((Buffer)ar.result().resultAt(0)).toJsonObject();
+        JsonObject jwkObject = ar.result().toJsonObject();
         JWTAuth auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(jwkObject));
         startServices(userPersistence, transactionPersistence, statusPersistence, redisClient, auth);
         startHttpServer(auth).setHandler(future.completer());
