@@ -15,7 +15,7 @@ public interface TransactionPersistence {
   Future<List<Transaction>> getTransactionsByUser(String username);
   Future<Transaction> getTransaction(String id);
   Future<Transaction> newTransaction(NewTransaction transaction, String from);
-  Future<Void> updateTransaction(String id, UpdateTransaction transaction);
+  Future<Void> updateTransaction(String id, UpdateTransaction updateTransaction, Transaction oldTransaction);
   Future<Void> removeTransaction(String id);
 
   static TransactionPersistence create(PgPool client, ReadModelManagerService readModelManager) {

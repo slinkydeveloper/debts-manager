@@ -4,6 +4,7 @@ import io.reactiverse.pgclient.*;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
+import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
@@ -274,6 +275,56 @@ public class TransactionsServiceTest extends BaseServicesTest {
         }));
       });
     }));
+    test.awaitCompletion(2000, TimeUnit.MILLISECONDS);
+  }
+
+  @Test
+  public void updateTransactionAndUpdateStatus(Vertx vertx, VertxTestContext test) throws InterruptedException {
+    Checkpoint statusFrancescoCheck = test.checkpoint();
+    Checkpoint commandsFrancescoCheck = test.checkpoint();
+    Checkpoint statusSlinkyCheck = test.checkpoint();
+    Checkpoint commandsSlinkyCheck = test.checkpoint();
+    OperationRequest slinkyLoggedContext = new OperationRequest().setUser(new JsonObject().put("username", "slinky"));
+
+    Future<OperationResponse> bootstrapTestFuture = FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
+      .compose(r -> FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)", Tuple.of("francesco", "slinky"), h)))
+      .compose(r -> CompositeFuture.all(
+        FutureUtils.<OperationResponse>futurify(h -> transactionsService.getUserStatus(null, loggedContext, h)),
+        FutureUtils.<OperationResponse>futurify(h -> transactionsService.getUserStatus(null, slinkyLoggedContext, h))
+      ))
+      .compose(r -> FutureUtils.<OperationResponse>futurify(h -> transactionsService.createTransaction(new NewTransaction("slinky", +20, "test"), loggedContext, h)))
+      .compose(t -> FutureUtils.futurify(h -> transactionsService.updateTransaction(t.getPayload().toJsonObject().getString("id"), new UpdateTransaction(+10d, "newtest"), loggedContext, h)));
+
+    test.assertComplete(bootstrapTestFuture)
+      .setHandler(ar -> {
+        test.verify(() -> {
+          assertSuccessResponse(ar.result());
+        });
+        vertx.setTimer(500, l -> {
+          redisClient.hgetall("status:francesco", test.succeeding(o -> {
+            test.verify(() -> {
+              assertEquals(1, o.size());
+              assertEquals(10, StatusUtils.mapToStatusMap(o).get("slinky").doubleValue());
+            });
+            statusFrancescoCheck.flag();
+          }));
+          redisClient.smembers("commands:francesco", test.succeeding(a -> {
+            test.verify(() -> assertEquals(3, a.size()));
+            commandsFrancescoCheck.flag();
+          }));
+          redisClient.hgetall("status:slinky", test.succeeding(o -> {
+            test.verify(() -> {
+              assertEquals(1, o.size());
+              assertEquals(-10, StatusUtils.mapToStatusMap(o).get("francesco").doubleValue());
+            });
+            statusSlinkyCheck.flag();
+          }));
+          redisClient.smembers("commands:slinky", test.succeeding(a -> {
+            test.verify(() -> assertEquals(3, a.size()));
+            commandsSlinkyCheck.flag();
+          }));
+        });
+      });
     test.awaitCompletion(2000, TimeUnit.MILLISECONDS);
   }
 

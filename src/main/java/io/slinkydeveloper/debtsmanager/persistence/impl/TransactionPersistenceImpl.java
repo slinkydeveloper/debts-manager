@@ -1,6 +1,7 @@
 package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Row;
 import io.reactiverse.pgclient.Tuple;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
@@ -10,6 +11,7 @@ import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionCreationCommand;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionUpdateCommand;
+import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -38,61 +40,56 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
 
   @Override
   public Future<List<Transaction>> getTransactionsByUser(String username) {
-    Future<List<Transaction>> fut = Future.future();
-    client.preparedQuery("SELECT * FROM \"transaction\" WHERE \"transaction\".\"to\"=$1 OR \"transaction\".\"from\"=$1", Tuple.of(username), ar -> {
-      if (ar.failed()) fut.fail(ar.cause());
-      List<Transaction> result = StreamSupport.stream(ar.result().spliterator(), false).map(this::mapRowToTransaction).collect(Collectors.toList());
-      fut.complete(result);
-    });
-    return fut;
+    return FutureUtils
+      .<PgRowSet>futurify(h -> client.preparedQuery("SELECT * FROM \"transaction\" WHERE \"transaction\".\"to\"=$1 OR \"transaction\".\"from\"=$1", Tuple.of(username), h))
+      .map(rows -> StreamSupport.stream(rows.spliterator(), false).map(this::mapRowToTransaction).collect(Collectors.toList()));
   }
 
   @Override
   public Future<Transaction> getTransaction(String id) {
-    Future<Transaction> fut = Future.future();
-    client.preparedQuery("SELECT * FROM \"transaction\" WHERE id=$1", Tuple.of(id), ar -> {
-      if (ar.failed()) fut.fail(ar.cause());
-      if (ar.result().rowCount() != 1) fut.complete(null);
-      fut.complete(mapRowToTransaction(ar.result().iterator().next()));
-    });
-    return fut;
+    return FutureUtils
+      .<PgRowSet>futurify(h -> client.preparedQuery("SELECT * FROM \"transaction\" WHERE \"id\"=$1", Tuple.of(Integer.valueOf(id)), h))
+      .map(rows -> (rows.rowCount() != 1) ? null : mapRowToTransaction(rows.iterator().next()));
   }
 
   @Override
   public Future<Transaction> newTransaction(NewTransaction transaction, String from) {
-    Future<Transaction> fut = Future.future();
-    client.preparedQuery("INSERT INTO \"transaction\" (description, \"from\", \"to\", at, value) VALUES ($1, $2, $3, current_timestamp, $4) ON CONFLICT DO NOTHING RETURNING *",
-      Tuple.of(transaction.getDescription(), from, transaction.getTo(), transaction.getValue()), ar -> {
-      if (ar.failed()) fut.fail(ar.cause());
-      Transaction t = mapRowToTransaction(ar.result().iterator().next());
-      readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), from, transaction.getTo(), transaction.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
-      fut.complete(t);
-    });
-    return fut;
+    return FutureUtils
+      .<PgRowSet>futurify(h ->
+        client.preparedQuery(
+          "INSERT INTO \"transaction\" (description, \"from\", \"to\", at, value) VALUES ($1, $2, $3, current_timestamp, $4) ON CONFLICT DO NOTHING RETURNING *",
+          Tuple.of(transaction.getDescription(), from, transaction.getTo(), transaction.getValue()),
+          h
+        )
+      )
+      .map(rows -> {
+        Transaction t = mapRowToTransaction(rows.iterator().next());
+        readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), from, transaction.getTo(), transaction.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
+        return t;
+      });
   }
 
   @Override
-  public Future<Void> updateTransaction(String id, UpdateTransaction updateTransaction) {
+  public Future<Void> updateTransaction(String id, UpdateTransaction updateTransaction, Transaction oldTransaction) {
     Future<Void> fut = Future.future();
     String query;
     Tuple tuple;
     if (updateTransaction.getDescription() != null && updateTransaction.getValue() != null) {
-      query = "UPDATE \"transaction\" SET description=$1, value=$2 WHERE id=$3 RETURNING *";
-      tuple = Tuple.of(updateTransaction.getDescription(), updateTransaction.getValue(), id);
+      query = "UPDATE \"transaction\" SET description=$1, value=$2 WHERE id=$3";
+      tuple = Tuple.of(updateTransaction.getDescription(), updateTransaction.getValue(), Integer.valueOf(id));
     } else if (updateTransaction.getDescription() != null) {
-      query = "UPDATE \"transaction\" SET description=$1 WHERE id=$3";
-      tuple = Tuple.of(updateTransaction.getDescription(), id);
+      query = "UPDATE \"transaction\" SET description=$1 WHERE id=$2";
+      tuple = Tuple.of(updateTransaction.getDescription(), Integer.valueOf(id));
     } else {
-      query = "UPDATE \"transaction\" SET value=$2 WHERE id=$3 RETURNING *";
-      tuple = Tuple.of(updateTransaction.getValue(), id);
+      query = "UPDATE \"transaction\" SET value=$1 WHERE id=$2";
+      tuple = Tuple.of(updateTransaction.getValue(), Integer.valueOf(id));
     }
     client.preparedQuery(query, tuple, ar -> {
         if (ar.failed()) fut.fail(ar.cause());
         if (updateTransaction.getValue() != null) {
-          Transaction oldT = mapRowToTransaction(ar.result().iterator().next());
           readModelManager
             .runCommand(
-              new UpdateStatusAfterTransactionUpdateCommand(id, oldT.getFrom(), oldT.getTo(), oldT.getValue(), updateTransaction.getValue()).toJson(),
+              new UpdateStatusAfterTransactionUpdateCommand(id, oldTransaction.getFrom(), oldTransaction.getTo(), oldTransaction.getValue(), updateTransaction.getValue()).toJson(),
               READ_MODEL_MANAGER_RESULT_HANDLER
             );
         }
@@ -103,14 +100,13 @@ public class TransactionPersistenceImpl implements TransactionPersistence {
 
   @Override
   public Future<Void> removeTransaction(String id) {
-    Future<Void> fut = Future.future();
-    client.preparedQuery("DELETE FROM \"transaction\" WHERE id=$1 RETURNING *", Tuple.of(id), ar -> {
-        if (ar.failed()) fut.fail(ar.cause());
-        Transaction t = mapRowToTransaction(ar.result().iterator().next());
-      readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), t.getFrom(), t.getTo(), t.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
-        fut.complete();
-    });
-    return fut;
+    return FutureUtils
+      .<PgRowSet>futurify(h -> client.preparedQuery("DELETE FROM \"transaction\" WHERE id=$1 RETURNING *", Tuple.of(Integer.valueOf(id)), h))
+      .map(row -> {
+        Transaction t = mapRowToTransaction(row.iterator().next());
+        readModelManager.runCommand(new UpdateStatusAfterTransactionCreationCommand(t.getId(), t.getFrom(), t.getTo(), t.getValue()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
+        return null;
+      });
   }
 
   private Transaction mapRowToTransaction(Row row) {

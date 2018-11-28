@@ -76,7 +76,7 @@ public class TransactionsServiceImpl implements TransactionsService {
             .setStatusCode(403)
             .setStatusMessage("Forbidden")
             .setPayload(Buffer.buffer("You are not authorized to update " + transactionId + " because you are not the transaction creator"))));
-        transactionPersistence.updateTransaction(transactionId, body).setHandler(ar -> {
+        transactionPersistence.updateTransaction(transactionId, body, getAr.result()).setHandler(ar -> {
           if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
           resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
         });
