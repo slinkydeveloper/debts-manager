@@ -12,12 +12,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
 
 import java.time.ZonedDateTime;
-import java.util.Map;
 
 public class TransactionsServiceImpl implements TransactionsService {
 

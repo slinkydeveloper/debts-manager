@@ -61,10 +61,4 @@ public class TestUtils {
     assertEquals(expectedResult, actual.getPayload().toJsonArray());
   }
 
-  public static <T> Future<T> futurify(Consumer<Handler<AsyncResult<T>>> c) {
-    Future<T> f = Future.future();
-    c.accept(f.completer());
-    return f;
-  }
-
 }

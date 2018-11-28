@@ -10,12 +10,13 @@ import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.persistence.impl.StatusUtils;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
+import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
 import io.vertx.core.*;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.ext.web.api.OperationResponse;
 import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
@@ -30,7 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 import static io.slinkydeveloper.debtsmanager.services.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -177,10 +177,10 @@ public class TransactionsServiceTest extends BaseServicesTest {
     Map<String, Double> fakeStatus = new HashMap<>();
     fakeStatus.put("fake", 10d);
     test.assertComplete(CompositeFuture.all(
-      TestUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("slinky", fakeStatus).toJson(), h)),
-      TestUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("francesco", fakeStatus).toJson(), h)),
-      TestUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
-        .compose(r -> TestUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)", Tuple.of("francesco", "slinky"), h)))
+      FutureUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("slinky", fakeStatus).toJson(), h)),
+      FutureUtils.<Boolean>futurify(h -> readModelManagerService.runCommand(new PushNewStatusCommand("francesco", fakeStatus).toJson(), h)),
+      FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
+        .compose(r -> FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)", Tuple.of("francesco", "slinky"), h)))
     )).setHandler(ar -> {
       NewTransaction transactionBody = new NewTransaction("slinky", +20, "test");
       transactionsService.createTransaction(transactionBody, loggedContext, test.succeeding(res -> {
@@ -221,6 +221,59 @@ public class TransactionsServiceTest extends BaseServicesTest {
         })
       );
     });
+    test.awaitCompletion(2000, TimeUnit.MILLISECONDS);
+  }
+
+  @Test
+  public void getUserStatusEmpty(VertxTestContext test) throws InterruptedException {
+    transactionsService.getUserStatus(null, loggedContext, test.succeeding(res -> {
+        test.verify(() -> {
+          assertJsonResponse(200, "OK", new JsonObject(), res);
+        });
+        test.completeNow();
+      })
+    );
+    test.awaitCompletion(1000, TimeUnit.MILLISECONDS);
+  }
+
+  @Test
+  public void getUserStatusMustCreateCache(Vertx vertx, VertxTestContext test) throws InterruptedException {
+    Checkpoint statusFrancescoCheck = test.checkpoint();
+    Checkpoint statusFrancescoRedisCheck = test.checkpoint();
+    Checkpoint statusSlinkyCheck = test.checkpoint();
+    Checkpoint statusSlinkyRedisCheck = test.checkpoint();
+    OperationRequest slinkyLoggedContext = new OperationRequest().setUser(new JsonObject().put("username", "slinky"));
+
+    FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
+      .compose(r -> FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2), ($2, $1)", Tuple.of("francesco", "slinky"), h)))
+      .compose(cf -> CompositeFuture.all(
+          FutureUtils.<OperationResponse>futurify(h -> transactionsService.createTransaction(new NewTransaction("slinky", +20, "test0"), loggedContext, h)),
+          FutureUtils.<OperationResponse>futurify(h -> transactionsService.createTransaction(new NewTransaction("francesco", +10, "test1"), slinkyLoggedContext, h))
+        )
+    ).setHandler(test.succeeding(cf -> {
+      transactionsService.getUserStatus(null, loggedContext, test.succeeding(opResponse -> {
+        test.verify(() ->
+          assertJsonResponse(200, "OK", new JsonObject().put("slinky", 10), opResponse)
+        );
+        statusFrancescoCheck.flag();
+      }));
+      transactionsService.getUserStatus(null, slinkyLoggedContext, test.succeeding(opResponse -> {
+        test.verify(() ->
+          assertJsonResponse(200, "OK", new JsonObject().put("francesco", -10), opResponse)
+        );
+        statusSlinkyCheck.flag();
+      }));
+      vertx.setTimer(500,  l -> {
+        statusPersistence.getStatusFromCache("francesco").setHandler(test.succeeding(map -> {
+          test.verify(() -> assertEquals(Double.valueOf(10), map.get("slinky")));
+          statusFrancescoRedisCheck.flag();
+        }));
+        statusPersistence.getStatusFromCache("slinky").setHandler(test.succeeding(map -> {
+          test.verify(() -> assertEquals(Double.valueOf(-10), map.get("francesco")));
+          statusSlinkyRedisCheck.flag();
+        }));
+      });
+    }));
     test.awaitCompletion(2000, TimeUnit.MILLISECONDS);
   }
 

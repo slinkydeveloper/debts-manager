@@ -1,12 +1,10 @@
 package io.slinkydeveloper.debtsmanager.persistence.impl;
 
-import io.reactiverse.pgclient.PgPool;
-import io.reactiverse.pgclient.PgPreparedQuery;
-import io.reactiverse.pgclient.Row;
-import io.reactiverse.pgclient.Tuple;
+import io.reactiverse.pgclient.*;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
+import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -63,13 +61,14 @@ public class StatusPersistenceImpl implements StatusPersistence {
   public Future<Map<String, Double>> getStatus(String username) {
     return getStatusFromCache(username).compose(map -> {
       if (map == null) {
-        Future<Map<String, Double>> fut = Future.succeededFuture();
-        return getStatusFromDb(username).setHandler(ar -> {
+        Future<Map<String, Double>> fut = Future.future();
+        getStatusFromDb(username).setHandler(ar -> {
           if (ar.succeeded()) {
             readModelManager.runCommand(new PushNewStatusCommand(username, ar.result()).toJson(), READ_MODEL_MANAGER_RESULT_HANDLER);
             fut.complete(ar.result());
           } else fut.fail(ar.cause());
         });
+        return fut;
       } else {
         return Future.succeededFuture(map);
       }
@@ -79,31 +78,36 @@ public class StatusPersistenceImpl implements StatusPersistence {
   @Override
   public Future<Map<String, Double>> getStatusFromCache(String username) {
     Future<Map<String, Double>> future = Future.future();
-    redisClient.hgetall("status:" + username, ar -> {
+    redisClient.scard("commands:" + username, ar -> {
       if (ar.failed()) future.fail(ar.cause());
-      Map<String, Double> status = StatusUtils.mapToStatusMap(ar.result());
-      future.complete(status);
+      if (ar.result() == 0) {
+        future.complete();
+      } else {
+        redisClient.hgetall("status:" + username, ar2 -> {
+          if (ar2.failed()) future.fail(ar2.cause());
+          if (ar2.result().isEmpty()) {
+            future.complete(null);
+          } else {
+            Map<String, Double> status = StatusUtils.mapToStatusMap(ar2.result());
+            future.complete(status);
+          }
+        });
+      }
     });
     return future;
   }
 
   @Override
   public Future<Map<String, Double>> getStatusFromDb(String username) {
-    Future<Map<String, Double>> fut = Future.future();
-    pgClient.preparedQuery(buildStatusQuery, statusCollector, ar -> {
-      if (ar.failed()) fut.fail(ar.cause());
-      fut.complete(ar.result().value());
-    });
-    return fut;
+    return FutureUtils
+      .<PgResult<Map<String, Double>>>futurify(h -> pgClient.preparedQuery(buildStatusQuery, Tuple.of(username), statusCollector, h))
+      .map(PgResult::value);
   }
 
   @Override
   public Future<Map<String, Double>> getStatusTill(String username, ZonedDateTime time) {
-    Future<Map<String, Double>> fut = Future.future();
-    pgClient.preparedQuery(buildStatusBeforeQuery, Tuple.of(username, time.withZoneSameInstant(ZoneId.of("UTC"))), statusCollector, ar -> {
-      if (ar.failed()) fut.fail(ar.cause());
-      fut.complete(ar.result().value());
-    });
-    return fut;
+    return FutureUtils
+      .<PgResult<Map<String, Double>>>futurify(h -> pgClient.preparedQuery(buildStatusBeforeQuery, Tuple.of(username, time.withZoneSameInstant(ZoneId.of("UTC"))), statusCollector, h))
+      .map(PgResult::value);
   }
 }
