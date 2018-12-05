@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public class StatusUtils {
 
   public static Map<String, Double> mapToStatusMap(JsonObject status) {
-    if (status == null) return new HashMap<>();
+    if (status == null) return null;
     return status
       .getMap()
       .entrySet()

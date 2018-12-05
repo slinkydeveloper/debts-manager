@@ -8,6 +8,7 @@ import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.redis.RedisClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,8 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import static io.slinkydeveloper.debtsmanager.utils.FutureUtils.futurify;
 
 public class StatusPersistenceImpl implements StatusPersistence {
 
@@ -77,24 +80,13 @@ public class StatusPersistenceImpl implements StatusPersistence {
 
   @Override
   public Future<Map<String, Double>> getStatusFromCache(String username) {
-    Future<Map<String, Double>> future = Future.future();
-    redisClient.scard("commands:" + username, ar -> {
-      if (ar.failed()) future.fail(ar.cause());
-      if (ar.result() == 0) {
-        future.complete();
-      } else {
-        redisClient.hgetall("status:" + username, ar2 -> {
-          if (ar2.failed()) future.fail(ar2.cause());
-          if (ar2.result().isEmpty()) {
-            future.complete(null);
-          } else {
-            Map<String, Double> status = StatusUtils.mapToStatusMap(ar2.result());
-            future.complete(status);
-          }
-        });
-      }
-    });
-    return future;
+    return FutureUtils
+      .<Long>futurify(h -> redisClient.scard("commands:" + username, h))
+      .compose(n ->
+        (n == 0) ?
+          Future.succeededFuture() :
+          FutureUtils.<JsonObject>futurify(h -> redisClient.hgetall("status:" + username, h)).map(StatusUtils::mapToStatusMap)
+      );
   }
 
   @Override
