@@ -30,7 +30,7 @@ public interface UsersService {
     OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 
   void getUsers(
-    OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
+    String filter, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 
   void connectUser(String userToConnect, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);
 

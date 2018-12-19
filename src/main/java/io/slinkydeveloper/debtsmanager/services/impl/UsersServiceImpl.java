@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class UsersServiceImpl implements UsersService {
 
@@ -94,11 +95,12 @@ public class UsersServiceImpl implements UsersService {
   }
 
   @Override
-  public void getUsers(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
-    persistence.getUsersList().setHandler(ar -> {
-      if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
-      resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(new JsonArray(ar.result()))));
-    });
+  public void getUsers(String filter, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
+    if (filter != null && !filter.isEmpty()) {
+      persistence.getUsersList(filter).setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
+    } else {
+      persistence.getUsersList().setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
+    }
   }
 
   @Override

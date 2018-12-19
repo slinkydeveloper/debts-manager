@@ -49,6 +49,13 @@ public class UserPersistenceImpl implements UserPersistence {
   }
 
   @Override
+  public Future<List<String>> getUsersList(String filter) {
+    Future<List<String>> fut = Future.future();
+    client.preparedQuery("SELECT username FROM \"user\" WHERE username LIKE $1", Tuple.of("%" + filter + "%"), generateUserListHandler(fut));
+    return fut;
+  }
+
+  @Override
   public Future<Void> addUserConnection(String from, String to) {
     Future<Void> fut = Future.future();
     client.preparedQuery("INSERT INTO userrelationship (\"from\", \"to\") VALUES ($1, $2) ON CONFLICT DO NOTHING", Tuple.of(from, to), ar -> {

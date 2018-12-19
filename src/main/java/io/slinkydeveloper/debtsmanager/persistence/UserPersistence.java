@@ -12,6 +12,7 @@ public interface UserPersistence {
   Future<Boolean> addUser(AuthCredentials user);
   Future<Boolean> userExists(AuthCredentials user);
   Future<List<String>> getUsersList();
+  Future<List<String>> getUsersList(String filter);
   Future<Void> addUserConnection(String from, String to);
   Future<List<String>> getAllowedFrom(String username);
   Future<List<String>> getAllowedTo(String username);

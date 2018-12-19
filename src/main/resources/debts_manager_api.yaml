@@ -89,7 +89,7 @@ paths:
         '401':
           description: 'Expired Token'
         '403':
-          description: 'Trying to update a transaction where `from` is not actual user'
+          description: 'Trying to update a transaction where `from` is not the logged user'
       security:
         - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
@@ -103,7 +103,7 @@ paths:
         '401':
           description: 'Expired Token '
         '403':
-          description: 'Trying to remove a transaction where `from` is not actual user'
+          description: 'Trying to remove a transaction where `from` is not the logged user'
       security:
         - loggedUserToken: []
       x-vertx-event-bus: transactions.debts_manager
@@ -116,7 +116,7 @@ paths:
           type: string
   /status:
     get:
-      summary: 'Get status of actual user'
+      summary: 'Get status of the logged user'
       operationId: getUserStatus
       parameters:
         - name: till
@@ -219,11 +219,11 @@ paths:
       security:
         - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
-  /users/connect/{userToConnect}:
+  /users/connected/{userToConnect}:
     post:
       summary: 'Connect user'
       description: "Connect user: when you connect to another user, he will be able to send transactions to you.
-                    If you want to send transactions from you to userX, userX must connect you calling this endpoint"
+                    If you want to send transactions from you to userX, userX must connect to you calling this endpoint"
       operationId: connectUser
       x-vertx-event-bus: users.debts_manager
       parameters:
@@ -233,7 +233,7 @@ paths:
           schema:
             $ref: '#/components/schemas/Username'
       responses:
-        '200':
+        '201':
           description: 'User connected'
         '401':
           description: 'Expired token'
@@ -243,6 +243,12 @@ paths:
     get:
       summary: 'Get all users'
       operationId: getUsers
+      parameters:
+        - name: filter
+          required: true
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: Ok
@@ -298,10 +304,12 @@ components:
             id:
               type: string
             at:
+              description: "Insertion datetime"
               format: date-time
               type: string
     Status:
       description: 'Map with users id as keys and debt as value'
+      type: object
       additionalProperties:
         type: number
   securitySchemes:

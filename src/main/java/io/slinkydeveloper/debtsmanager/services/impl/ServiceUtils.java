@@ -27,7 +27,7 @@ public class ServiceUtils {
     };
   }
 
-  public static <T> Handler<AsyncResult<List<T>>> sendRetrievedArrayHandler(Handler<AsyncResult<OperationResponse>> resultHandler, Function<T, JsonObject> mapper) {
+  public static <T> Handler<AsyncResult<List<T>>> sendRetrievedArrayHandler(Handler<AsyncResult<OperationResponse>> resultHandler, Function<T, Object> mapper) {
     return ar -> {
       if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
       resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(new JsonArray(ar.result().stream().map(mapper).collect(Collectors.toList())))));

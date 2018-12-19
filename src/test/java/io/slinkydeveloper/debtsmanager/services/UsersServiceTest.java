@@ -9,6 +9,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.api.OperationRequest;
+import io.vertx.junit5.Checkpoint;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.BeforeAll;
@@ -69,14 +70,22 @@ public class UsersServiceTest extends BaseServicesTest {
 
   @Test
   public void getUsers(VertxTestContext test) {
+    Checkpoint checkNonFiltered = test.checkpoint();
+    Checkpoint checkFiltered = test.checkpoint();
     pgClient.preparedQuery(
       "INSERT INTO \"user\" (username, password) VALUES ($1, $2), ($3, $4), ($5, $6)",
       Tuple.of("slinky", "slinky", "paolorossi", "paolorossi", "mariorossi", "mariorossi"), test.succeeding(rows -> {
-        usersService.getUsers(loggedContext, test.succeeding(op -> {
+        usersService.getUsers(null, loggedContext, test.succeeding(op -> {
           test.verify(() -> {
             assertJsonResponse(200, "OK", new JsonArray().add("francesco").add("slinky").add("paolorossi").add("mariorossi"), op);
           });
-          test.completeNow();
+          checkNonFiltered.flag();
+        }));
+        usersService.getUsers("rossi", loggedContext, test.succeeding(op -> {
+          test.verify(() -> {
+            assertJsonResponse(200, "OK", new JsonArray().add("paolorossi").add("mariorossi"), op);
+          });
+          checkFiltered.flag();
         }));
       }));
   }
