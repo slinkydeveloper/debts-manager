@@ -1,11 +1,9 @@
 package io.slinkydeveloper.debtsmanager.readmodel.command;
 
-import io.vertx.codegen.annotations.DataObject;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelCacheCommands;
 import io.vertx.codegen.annotations.Fluent;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.redis.RedisClient;
 
 import java.util.Map;
 
@@ -24,6 +22,11 @@ public class PushNewStatusCommand extends AbstractCommand {
 
   public JsonObject toJson() {
     return JsonObject.mapFrom(this);
+  }
+
+  @Override
+  public Future<Boolean> execute(ReadModelCacheCommands commands) {
+    return commands.pushNewStatus(this.getUsername(), this.getCommandId(), this.getStatus());
   }
 
   public String getUsername() {

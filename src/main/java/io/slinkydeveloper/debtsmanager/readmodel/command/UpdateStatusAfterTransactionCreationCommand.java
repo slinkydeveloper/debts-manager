@@ -1,11 +1,9 @@
 package io.slinkydeveloper.debtsmanager.readmodel.command;
 
-import io.vertx.codegen.annotations.DataObject;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelCacheCommands;
 import io.vertx.codegen.annotations.Fluent;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
-import io.vertx.redis.RedisClient;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 
 public class UpdateStatusAfterTransactionCreationCommand extends AbstractCommand {
 
@@ -62,5 +60,13 @@ public class UpdateStatusAfterTransactionCreationCommand extends AbstractCommand
   public UpdateStatusAfterTransactionCreationCommand setValue(double value) {
     this.value = value;
     return this;
+  }
+
+  @Override
+  public Future<Boolean> execute(ReadModelCacheCommands commands) {
+    return CompositeFuture.all(
+      commands.updateTransaction(this.getFrom(), this.getCommandId(), this.getTo(), this.getValue()),
+      commands.updateTransaction(this.getTo(), this.getCommandId(), this.getFrom(), -this.getValue())
+    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
   }
 }

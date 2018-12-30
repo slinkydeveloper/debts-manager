@@ -1,70 +1,31 @@
 package io.slinkydeveloper.debtsmanager.readmodel.impl;
 
 import io.slinkydeveloper.debtsmanager.readmodel.Command;
+import io.slinkydeveloper.debtsmanager.readmodel.ReadModelCacheCommands;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
-import io.slinkydeveloper.debtsmanager.readmodel.command.*;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
 import io.vertx.redis.RedisClient;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ReadModelManagerImpl implements ReadModelManagerService {
 
   private final RedisClient redisClient;
+  private final ReadModelCacheCommands readModelCacheCommands;
 
   private final static Logger log = LoggerFactory.getLogger(ReadModelManagerService.class);
 
   public ReadModelManagerImpl(RedisClient redisClient) {
     this.redisClient = redisClient;
-  }
-
-  private Future<Boolean> runUpdateStatusAfterTransactionUpdateCommand(UpdateStatusAfterTransactionUpdateCommand command) {
-    double difference = command.getNewValue() - command.getOldValue();
-    return CompositeFuture.all(
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), difference),
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), -difference)
-    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
-  }
-
-  private Future<Boolean> runUpdateStatusAfterTransactionRemoveCommand(UpdateStatusAfterTransactionRemoveCommand command) {
-    return CompositeFuture.all(
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), -command.getValue()),
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), command.getValue())
-    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
-  }
-
-  private Future<Boolean> runUpdateStatusAfterTransactionCreationCommand(UpdateStatusAfterTransactionCreationCommand command) {
-    return CompositeFuture.all(
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getFrom(), command.getCommandId(), command.getTo(), command.getValue()),
-      DebtsManagerRedisCommands.updateTransaction(redisClient, command.getTo(), command.getCommandId(), command.getFrom(), -command.getValue())
-    ).map(cf -> (Boolean) cf.resultAt(0) && (Boolean) cf.resultAt(1));
-  }
-
-  private Future<Boolean> runPushNewStatusCommand(PushNewStatusCommand command) {
-    return DebtsManagerRedisCommands.pushNewStatus(redisClient, command.getUsername(), command.getCommandId(), command.getStatus());
+    this.readModelCacheCommands = new ReadModelCacheCommandsImpl(redisClient);
   }
 
   @Override
   public void runCommand(JsonObject jsonCommand, Handler<AsyncResult<Boolean>> resultHandler) {
     Command command = jsonCommand.mapTo(Command.class);
-    Future<Boolean> fut;
-    if (command instanceof PushNewStatusCommand)
-      fut = runPushNewStatusCommand((PushNewStatusCommand) command);
-    else if (command instanceof UpdateStatusAfterTransactionCreationCommand)
-      fut = runUpdateStatusAfterTransactionCreationCommand((UpdateStatusAfterTransactionCreationCommand) command);
-    else if (command instanceof UpdateStatusAfterTransactionRemoveCommand)
-      fut = runUpdateStatusAfterTransactionRemoveCommand((UpdateStatusAfterTransactionRemoveCommand) command);
-    else if (command instanceof UpdateStatusAfterTransactionUpdateCommand)
-      fut = runUpdateStatusAfterTransactionUpdateCommand((UpdateStatusAfterTransactionUpdateCommand) command);
-    else {
-      resultHandler.handle(Future.failedFuture("Command not exists"));
-      return;
-    }
-    fut.setHandler(ar -> {
+    command.execute(readModelCacheCommands).setHandler(ar -> {
       if (ar.failed()) {
         log.warn("Error during transaction script execution. Maybe because of a race condition?", ar.cause());
       } else {
