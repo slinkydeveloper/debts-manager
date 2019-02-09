@@ -1,11 +1,11 @@
 package io.slinkydeveloper.debtsmanager.services.impl;
 
+import io.slinkydeveloper.debtsmanager.dao.StatusDao;
+import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
-import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -20,11 +20,11 @@ import java.time.ZonedDateTime;
 public class TransactionsServiceImpl implements TransactionsService {
 
   private final Vertx vertx;
-  private final StatusPersistence statusPersistence;
-  private final TransactionPersistence transactionPersistence;
-  private final UserPersistence userPersistence;
+  private final StatusDao statusPersistence;
+  private final TransactionDao transactionPersistence;
+  private final UserDao userPersistence;
 
-  public TransactionsServiceImpl(Vertx vertx, StatusPersistence statusPersistence, TransactionPersistence transactionPersistence, UserPersistence userPersistence) {
+  public TransactionsServiceImpl(Vertx vertx, StatusDao statusPersistence, TransactionDao transactionPersistence, UserDao userPersistence) {
     this.vertx = vertx;
     this.statusPersistence = statusPersistence;
     this.transactionPersistence = transactionPersistence;

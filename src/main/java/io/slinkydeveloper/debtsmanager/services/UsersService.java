@@ -1,7 +1,7 @@
 package io.slinkydeveloper.debtsmanager.services;
 
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.impl.UsersServiceImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -14,7 +14,7 @@ import io.vertx.ext.web.api.generator.WebApiServiceGen;
 @WebApiServiceGen
 public interface UsersService {
 
-  static UsersService create(Vertx vertx, UserPersistence persistence, JWTAuth auth) {
+  static UsersService create(Vertx vertx, UserDao persistence, JWTAuth auth) {
     return new UsersServiceImpl(vertx, persistence, auth);
   }
 

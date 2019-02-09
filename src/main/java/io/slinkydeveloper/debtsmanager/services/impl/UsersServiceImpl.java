@@ -1,7 +1,7 @@
 package io.slinkydeveloper.debtsmanager.services.impl;
 
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
@@ -16,17 +16,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.function.Function;
 
 public class UsersServiceImpl implements UsersService {
 
   private final Vertx vertx;
-  private final UserPersistence persistence;
+  private final UserDao persistence;
   private final JWTAuth auth;
 
   private final static Logger log = LoggerFactory.getLogger(UsersService.class);
 
-  public UsersServiceImpl(Vertx vertx, UserPersistence persistence, JWTAuth auth) {
+  public UsersServiceImpl(Vertx vertx, UserDao persistence, JWTAuth auth) {
     this.vertx = vertx;
     this.persistence = persistence;
     this.auth = auth;

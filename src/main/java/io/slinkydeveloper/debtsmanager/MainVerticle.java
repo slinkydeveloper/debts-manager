@@ -3,16 +3,15 @@ package io.slinkydeveloper.debtsmanager;
 import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
+import io.slinkydeveloper.debtsmanager.dao.StatusDao;
+import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
-import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.circuitbreaker.CircuitBreaker;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -104,9 +103,9 @@ public class MainVerticle extends AbstractVerticle {
             .setResetTimeout(10000)
         );
         ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createClient(vertx, "read_model_manager.debts_manager", readModelManagerCircuitBreaker);
-        UserPersistence userPersistence = UserPersistence.create(pgClient);
-        TransactionPersistence transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerProxy);
-        StatusPersistence statusPersistence = StatusPersistence.create(
+        UserDao userPersistence = UserDao.create(pgClient);
+        TransactionDao transactionPersistence = TransactionDao.create(pgClient, readModelManagerProxy);
+        StatusDao statusPersistence = StatusDao.create(
           redisClient,
           pgClient,
           readModelManagerProxy
@@ -134,7 +133,7 @@ public class MainVerticle extends AbstractVerticle {
     return fut;
   }
 
-  private void startServices(UserPersistence userPersistence, TransactionPersistence transactionPersistence, StatusPersistence statusPersistence, RedisClient redisClient, JWTAuth auth) {
+  private void startServices(UserDao userPersistence, TransactionDao transactionPersistence, StatusDao statusPersistence, RedisClient redisClient, JWTAuth auth) {
     serviceBinder = new ServiceBinder(vertx);
 
     registeredConsumers = new ArrayList<>();

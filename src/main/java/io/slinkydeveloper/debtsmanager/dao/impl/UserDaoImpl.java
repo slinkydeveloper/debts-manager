@@ -1,10 +1,10 @@
-package io.slinkydeveloper.debtsmanager.persistence.impl;
+package io.slinkydeveloper.debtsmanager.dao.impl;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Tuple;
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-public class UserPersistenceImpl implements UserPersistence {
+public class UserDaoImpl implements UserDao {
 
   PgPool client;
 
-  public UserPersistenceImpl(PgPool client) {
+  public UserDaoImpl(PgPool client) {
     this.client = client;
   }
 

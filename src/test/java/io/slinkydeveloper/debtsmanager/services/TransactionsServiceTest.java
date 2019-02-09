@@ -1,18 +1,20 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.*;
+import io.slinkydeveloper.debtsmanager.dao.StatusDao;
+import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
+import io.slinkydeveloper.debtsmanager.dao.impl.DaoUtils;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
-import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.TransactionPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
-import io.slinkydeveloper.debtsmanager.persistence.impl.StatusUtils;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
-import io.vertx.core.*;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -46,9 +48,9 @@ public class TransactionsServiceTest extends BaseServicesTest {
 
   private PgPool pgClient;
   private RedisClient redisClient;
-  private UserPersistence userPersistence;
-  private TransactionPersistence transactionPersistence;
-  private StatusPersistence statusPersistence;
+  private UserDao userPersistence;
+  private TransactionDao transactionPersistence;
+  private StatusDao statusPersistence;
   private TransactionsService transactionsService;
   private ReadModelManagerService readModelManagerService;
 
@@ -73,9 +75,9 @@ public class TransactionsServiceTest extends BaseServicesTest {
         .setHost(environment.getServiceHost("redis", REDIS_PORT))
     );
     readModelManagerService = ReadModelManagerService.create(redisClient);
-    userPersistence = UserPersistence.create(pgClient);
-    transactionPersistence = TransactionPersistence.create(pgClient, readModelManagerService);
-    statusPersistence = StatusPersistence.create(redisClient, pgClient, readModelManagerService);
+    userPersistence = UserDao.create(pgClient);
+    transactionPersistence = TransactionDao.create(pgClient, readModelManagerService);
+    statusPersistence = StatusDao.create(redisClient, pgClient, readModelManagerService);
     transactionsService = TransactionsService.create(vertx, statusPersistence, transactionPersistence, userPersistence);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
       auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
@@ -199,7 +201,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
             redisClient.hgetall("status:francesco", test.succeeding(o -> {
               test.verify(() -> {
                 assertEquals(2, o.size());
-                assertEquals(20, StatusUtils.mapToStatusMap(o).get("slinky").doubleValue());
+                assertEquals(20, DaoUtils.mapToStatusMap(o).get("slinky").doubleValue());
               });
               statusFrancescoCheck.flag();
             }));
@@ -210,7 +212,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
             redisClient.hgetall("status:slinky", test.succeeding(o -> {
               test.verify(() -> {
                 assertEquals(2, o.size());
-                assertEquals(-20, StatusUtils.mapToStatusMap(o).get("francesco").doubleValue());
+                assertEquals(-20, DaoUtils.mapToStatusMap(o).get("francesco").doubleValue());
               });
               statusSlinkyCheck.flag();
             }));
@@ -304,7 +306,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
           redisClient.hgetall("status:francesco", test.succeeding(o -> {
             test.verify(() -> {
               assertEquals(1, o.size());
-              assertEquals(10, StatusUtils.mapToStatusMap(o).get("slinky").doubleValue());
+              assertEquals(10, DaoUtils.mapToStatusMap(o).get("slinky").doubleValue());
             });
             statusFrancescoCheck.flag();
           }));
@@ -315,7 +317,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
           redisClient.hgetall("status:slinky", test.succeeding(o -> {
             test.verify(() -> {
               assertEquals(1, o.size());
-              assertEquals(-10, StatusUtils.mapToStatusMap(o).get("francesco").doubleValue());
+              assertEquals(-10, DaoUtils.mapToStatusMap(o).get("francesco").doubleValue());
             });
             statusSlinkyCheck.flag();
           }));

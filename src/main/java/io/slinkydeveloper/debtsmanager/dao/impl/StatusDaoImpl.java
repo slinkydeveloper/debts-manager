@@ -1,8 +1,10 @@
-package io.slinkydeveloper.debtsmanager.persistence.impl;
+package io.slinkydeveloper.debtsmanager.dao.impl;
 
-import io.reactiverse.pgclient.*;
+import io.reactiverse.pgclient.PgPool;
+import io.reactiverse.pgclient.PgResult;
+import io.reactiverse.pgclient.Tuple;
+import io.slinkydeveloper.debtsmanager.dao.StatusDao;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
-import io.slinkydeveloper.debtsmanager.persistence.StatusPersistence;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
 import io.vertx.core.AsyncResult;
@@ -20,20 +22,18 @@ import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
-import static io.slinkydeveloper.debtsmanager.utils.FutureUtils.futurify;
+import static io.slinkydeveloper.debtsmanager.dao.impl.DaoUtils.statusCollector;
 
-public class StatusPersistenceImpl implements StatusPersistence {
+public class StatusDaoImpl implements StatusDao {
 
   private static String buildStatusQuery;
   private static String buildStatusBeforeQuery;
 
   static {
     try {
-      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getClassLoader().getResource("sql/build_status_query.sql").toURI())));
-      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusPersistenceImpl.class.getClassLoader().getResource("sql/build_status_before_query.sql").toURI())));
+      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusDaoImpl.class.getClassLoader().getResource("sql/build_status_query.sql").toURI())));
+      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusDaoImpl.class.getClassLoader().getResource("sql/build_status_before_query.sql").toURI())));
     } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }
@@ -44,17 +44,12 @@ public class StatusPersistenceImpl implements StatusPersistence {
 
   private final ReadModelManagerService readModelManager;
 
-  private final static Logger log = LoggerFactory.getLogger(StatusPersistenceImpl.class);
+  private final static Logger log = LoggerFactory.getLogger(StatusDaoImpl.class);
   private final static Handler<AsyncResult<Boolean>> READ_MODEL_MANAGER_RESULT_HANDLER = ar -> {
     if (ar.failed()) log.warn("Unable to update read model", ar.cause());
   };
 
-  private final static Collector<Row, ?, Map<String, Double>> statusCollector = Collectors.toMap(
-    row -> row.getString("username"),
-    row -> row.getDouble("total")
-  );
-
-  public StatusPersistenceImpl(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
+  public StatusDaoImpl(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
     this.redisClient = redisClient;
     this.pgClient = pgClient;
     this.readModelManager = readModelManager;
@@ -85,7 +80,7 @@ public class StatusPersistenceImpl implements StatusPersistence {
       .compose(n ->
         (n == 0) ?
           Future.succeededFuture() :
-          FutureUtils.<JsonObject>futurify(h -> redisClient.hgetall("status:" + username, h)).map(StatusUtils::mapToStatusMap)
+          FutureUtils.<JsonObject>futurify(h -> redisClient.hgetall("status:" + username, h)).map(DaoUtils::mapToStatusMap)
       );
   }
 

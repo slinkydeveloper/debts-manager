@@ -1,12 +1,6 @@
 package io.slinkydeveloper.debtsmanager;
 
-import io.reactiverse.pgclient.PgClient;
-import io.reactiverse.pgclient.PgPoolOptions;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
-import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.core.Vertx;
-import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

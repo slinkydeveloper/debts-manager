@@ -1,8 +1,8 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.*;
+import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
-import io.slinkydeveloper.debtsmanager.persistence.UserPersistence;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -22,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 
 import static io.slinkydeveloper.debtsmanager.services.TestUtils.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * UsersService Test
@@ -32,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class UsersServiceTest extends BaseServicesTest {
 
   private PgPool pgClient;
-  private UserPersistence userPersistence;
+  private UserDao userPersistence;
   private JWTAuth auth;
   private OperationRequest loggedContext;
 
@@ -48,7 +47,7 @@ public class UsersServiceTest extends BaseServicesTest {
         .setUser("postgres")
         .setPassword("postgres")
     );
-    userPersistence = UserPersistence.create(pgClient);
+    userPersistence = UserDao.create(pgClient);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
       auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
       usersService = UsersService.create(vertx, userPersistence, auth);

@@ -1,16 +1,16 @@
-package io.slinkydeveloper.debtsmanager.persistence;
+package io.slinkydeveloper.debtsmanager.dao;
 
 import io.reactiverse.pgclient.PgPool;
+import io.slinkydeveloper.debtsmanager.dao.impl.TransactionDaoImpl;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
-import io.slinkydeveloper.debtsmanager.persistence.impl.TransactionPersistenceImpl;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.vertx.core.Future;
 
 import java.util.List;
 
-public interface TransactionPersistence {
+public interface TransactionDao {
 
   Future<List<Transaction>> getTransactionsByUser(String username);
   Future<Transaction> getTransaction(String id);
@@ -18,8 +18,8 @@ public interface TransactionPersistence {
   Future<Void> updateTransaction(String id, UpdateTransaction updateTransaction, Transaction oldTransaction);
   Future<Void> removeTransaction(String id);
 
-  static TransactionPersistence create(PgPool client, ReadModelManagerService readModelManager) {
-    return new TransactionPersistenceImpl(client, readModelManager);
+  static TransactionDao create(PgPool client, ReadModelManagerService readModelManager) {
+    return new TransactionDaoImpl(client, readModelManager);
   }
 
 }
