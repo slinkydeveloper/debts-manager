@@ -320,4 +320,3 @@ components:
     transactions.debts_manager: TransactionsService
     users.debts_manager: UsersService
     status.debts_manager: StatusService
-    login.debts_manager: LoginService
