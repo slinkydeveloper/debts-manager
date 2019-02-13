@@ -48,9 +48,9 @@ public class TransactionsServiceTest extends BaseServicesTest {
 
   private PgPool pgClient;
   private RedisClient redisClient;
-  private UserDao userPersistence;
-  private TransactionDao transactionPersistence;
-  private StatusDao statusPersistence;
+  private UserDao userDao;
+  private TransactionDao transactionDao;
+  private StatusDao statusDao;
   private TransactionsService transactionsService;
   private StatusService statusService;
   private ReadModelManagerService readModelManagerService;
@@ -76,14 +76,14 @@ public class TransactionsServiceTest extends BaseServicesTest {
         .setHost(environment.getServiceHost("redis", REDIS_PORT))
     );
     readModelManagerService = ReadModelManagerService.create(redisClient);
-    userPersistence = UserDao.create(pgClient);
-    transactionPersistence = TransactionDao.create(pgClient, readModelManagerService);
-    statusPersistence = StatusDao.create(redisClient, pgClient, readModelManagerService);
-    transactionsService = TransactionsService.create(transactionPersistence, userPersistence);
-    statusService = StatusService.create(vertx, statusPersistence);
+    userDao = UserDao.create(pgClient);
+    transactionDao = TransactionDao.create(pgClient, readModelManagerService);
+    statusDao = StatusDao.create(redisClient, pgClient, readModelManagerService);
+    transactionsService = TransactionsService.create(transactionDao, userDao);
+    statusService = StatusService.create(vertx, statusDao);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
       auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
-      usersService = UsersService.create(vertx, userPersistence, auth);
+      usersService = UsersService.create(userDao, auth);
       testContext.completeNow();
     }));
   }
@@ -269,11 +269,11 @@ public class TransactionsServiceTest extends BaseServicesTest {
         statusSlinkyCheck.flag();
       }));
       vertx.setTimer(500,  l -> {
-        statusPersistence.getStatusFromCache("francesco").setHandler(test.succeeding(map -> {
+        statusDao.getStatusFromCache("francesco").setHandler(test.succeeding(map -> {
           test.verify(() -> assertEquals(Double.valueOf(10), map.get("slinky")));
           statusFrancescoRedisCheck.flag();
         }));
-        statusPersistence.getStatusFromCache("slinky").setHandler(test.succeeding(map -> {
+        statusDao.getStatusFromCache("slinky").setHandler(test.succeeding(map -> {
           test.verify(() -> assertEquals(Double.valueOf(-10), map.get("francesco")));
           statusSlinkyRedisCheck.flag();
         }));

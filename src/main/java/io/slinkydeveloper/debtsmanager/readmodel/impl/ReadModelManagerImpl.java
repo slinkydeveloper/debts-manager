@@ -12,13 +12,11 @@ import org.slf4j.LoggerFactory;
 
 public class ReadModelManagerImpl implements ReadModelManagerService {
 
-  private final RedisClient redisClient;
   private final ReadModelCacheCommands readModelCacheCommands;
 
   private final static Logger log = LoggerFactory.getLogger(ReadModelManagerService.class);
 
   public ReadModelManagerImpl(RedisClient redisClient) {
-    this.redisClient = redisClient;
     this.readModelCacheCommands = new ReadModelCacheCommandsImpl(redisClient);
   }
 

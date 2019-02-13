@@ -14,8 +14,8 @@ import io.vertx.ext.web.api.generator.WebApiServiceGen;
 @WebApiServiceGen
 public interface TransactionsService {
 
-  static TransactionsService create(TransactionDao transactionPersistence, UserDao userPersistence) {
-    return new TransactionsServiceImpl(transactionPersistence, userPersistence);
+  static TransactionsService create(TransactionDao transactionDao, UserDao userDao) {
+    return new TransactionsServiceImpl(transactionDao, userDao);
   }
 
   void getTransactions(

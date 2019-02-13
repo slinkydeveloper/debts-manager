@@ -3,7 +3,10 @@ package io.slinkydeveloper.debtsmanager.services.impl;
 import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonArray;
@@ -19,22 +22,20 @@ import java.util.List;
 
 public class UsersServiceImpl implements UsersService {
 
-  private final Vertx vertx;
-  private final UserDao persistence;
+  private final UserDao userDao;
   private final JWTAuth auth;
 
   private final static Logger log = LoggerFactory.getLogger(UsersService.class);
 
-  public UsersServiceImpl(Vertx vertx, UserDao persistence, JWTAuth auth) {
-    this.vertx = vertx;
-    this.persistence = persistence;
+  public UsersServiceImpl(UserDao userDao, JWTAuth auth) {
+    this.userDao = userDao;
     this.auth = auth;
   }
 
   @Override
   public void login(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
     body.hashPassword();
-    persistence.userExists(body).setHandler(ar -> {
+    userDao.userExists(body).setHandler(ar -> {
       if (ar.succeeded()) {
         if (ar.result()) {
           log.info("Logged user {}", body.getUsername());
@@ -57,7 +58,7 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public void register(AuthCredentials body, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
     body.hashPassword();
-    persistence.addUser(body).setHandler(ar -> {
+    userDao.addUser(body).setHandler(ar -> {
       if (ar.succeeded()) {
         if (!ar.result()) {
           log.warn("User is trying to register again: " + body.getUsername());
@@ -81,8 +82,8 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public void getConnectedUsers(OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
     CompositeFuture.all(
-      persistence.getAllowedTo(context.getUser().getString("username")),
-      persistence.getAllowedFrom(context.getUser().getString("username"))
+      userDao.getAllowedTo(context.getUser().getString("username")),
+      userDao.getAllowedFrom(context.getUser().getString("username"))
     ).setHandler(ar -> {
       if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
       resultHandler.handle(Future.succeededFuture(OperationResponse.completedWithJson(
@@ -96,15 +97,15 @@ public class UsersServiceImpl implements UsersService {
   @Override
   public void getUsers(String filter, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
     if (filter != null && !filter.isEmpty()) {
-      persistence.getUsersList(filter).setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
+      userDao.getUsersList(filter).setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
     } else {
-      persistence.getUsersList().setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
+      userDao.getUsersList().setHandler(ServiceUtils.sendRetrievedArrayHandler(resultHandler, s -> s));
     }
   }
 
   @Override
   public void connectUser(String userToConnect, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler) {
-    persistence.addUserConnection(userToConnect, context.getUser().getString("username")).setHandler(ar -> {
+    userDao.addUserConnection(userToConnect, context.getUser().getString("username")).setHandler(ar -> {
       if (ar.failed()) resultHandler.handle(Future.failedFuture(ar.cause()));
       resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
     });

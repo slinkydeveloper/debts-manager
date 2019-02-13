@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UsersServiceTest extends BaseServicesTest {
 
   private PgPool pgClient;
-  private UserDao userPersistence;
+  private UserDao userDao;
   private JWTAuth auth;
   private OperationRequest loggedContext;
 
@@ -47,10 +47,10 @@ public class UsersServiceTest extends BaseServicesTest {
         .setUser("postgres")
         .setPassword("postgres")
     );
-    userPersistence = UserDao.create(pgClient);
+    userDao = UserDao.create(pgClient);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
       auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
-      usersService = UsersService.create(vertx, userPersistence, auth);
+      usersService = UsersService.create(userDao, auth);
       testContext.completeNow();
     }));
   }

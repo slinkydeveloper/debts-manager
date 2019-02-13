@@ -5,7 +5,6 @@ import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.services.impl.UsersServiceImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
@@ -14,8 +13,8 @@ import io.vertx.ext.web.api.generator.WebApiServiceGen;
 @WebApiServiceGen
 public interface UsersService {
 
-  static UsersService create(Vertx vertx, UserDao persistence, JWTAuth auth) {
-    return new UsersServiceImpl(vertx, persistence, auth);
+  static UsersService create(UserDao userDao, JWTAuth auth) {
+    return new UsersServiceImpl(userDao, auth);
   }
 
   void login(

@@ -53,7 +53,7 @@ public class MainVerticle extends AbstractVerticle {
         // Enable automatic response when ValidationException is thrown
         routerFactory.setOptions(new RouterFactoryOptions().setMountValidationFailureHandler(true));
 
-        // Add gloabl handler
+        // Add global handler
         routerFactory.addGlobalHandler(LoggerHandler.create());
 
         // Mount services on event bus based on extensions
@@ -104,16 +104,16 @@ public class MainVerticle extends AbstractVerticle {
             .setResetTimeout(10000)
         );
         ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createClient(vertx, "read_model_manager.debts_manager", readModelManagerCircuitBreaker);
-        UserDao userPersistence = UserDao.create(pgClient);
-        TransactionDao transactionPersistence = TransactionDao.create(pgClient, readModelManagerProxy);
-        StatusDao statusPersistence = StatusDao.create(
+        UserDao userDao = UserDao.create(pgClient);
+        TransactionDao transactionDao = TransactionDao.create(pgClient, readModelManagerProxy);
+        StatusDao statusDao = StatusDao.create(
           redisClient,
           pgClient,
           readModelManagerProxy
         );
         JsonObject jwkObject = ar.result().toJsonObject();
         JWTAuth auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(jwkObject));
-        startServices(userPersistence, transactionPersistence, statusPersistence, redisClient, auth);
+        startServices(userDao, transactionDao, statusDao, redisClient, auth);
         startHttpServer(auth).setHandler(future.completer());
       }
     });
@@ -134,24 +134,24 @@ public class MainVerticle extends AbstractVerticle {
     return fut;
   }
 
-  private void startServices(UserDao userPersistence, TransactionDao transactionPersistence, StatusDao statusPersistence, RedisClient redisClient, JWTAuth auth) {
+  private void startServices(UserDao userDao, TransactionDao transactionDao, StatusDao statusDao, RedisClient redisClient, JWTAuth auth) {
     serviceBinder = new ServiceBinder(vertx);
 
     registeredConsumers = new ArrayList<>();
 
-    TransactionsService transactionsService = TransactionsService.create(transactionPersistence, userPersistence);
+    TransactionsService transactionsService = TransactionsService.create(transactionDao, userDao);
     registeredConsumers.add(
       serviceBinder
         .setAddress("transactions.debts_manager")
         .register(TransactionsService.class, transactionsService)
     );
-    UsersService usersService = UsersService.create(vertx, userPersistence, auth);
+    UsersService usersService = UsersService.create(userDao, auth);
     registeredConsumers.add(
       serviceBinder
         .setAddress("users.debts_manager")
         .register(UsersService.class, usersService)
     );
-    StatusService statusService = StatusService.create(vertx, statusPersistence);
+    StatusService statusService = StatusService.create(vertx, statusDao);
     registeredConsumers.add(
       serviceBinder
         .setAddress("status.debts_manager")
