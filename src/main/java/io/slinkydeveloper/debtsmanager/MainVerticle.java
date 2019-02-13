@@ -7,6 +7,7 @@ import io.slinkydeveloper.debtsmanager.dao.StatusDao;
 import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
 import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
+import io.slinkydeveloper.debtsmanager.services.StatusService;
 import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.slinkydeveloper.debtsmanager.services.UsersService;
 import io.vertx.circuitbreaker.CircuitBreaker;
@@ -138,7 +139,7 @@ public class MainVerticle extends AbstractVerticle {
 
     registeredConsumers = new ArrayList<>();
 
-    TransactionsService transactionsService = TransactionsService.create(vertx, statusPersistence, transactionPersistence, userPersistence);
+    TransactionsService transactionsService = TransactionsService.create(transactionPersistence, userPersistence);
     registeredConsumers.add(
       serviceBinder
         .setAddress("transactions.debts_manager")
@@ -149,6 +150,12 @@ public class MainVerticle extends AbstractVerticle {
       serviceBinder
         .setAddress("users.debts_manager")
         .register(UsersService.class, usersService)
+    );
+    StatusService statusService = StatusService.create(vertx, statusPersistence);
+    registeredConsumers.add(
+      serviceBinder
+        .setAddress("status.debts_manager")
+        .register(StatusService.class, statusService)
     );
     ReadModelManagerService readModelManager = ReadModelManagerService.create(redisClient);
     registeredConsumers.add(

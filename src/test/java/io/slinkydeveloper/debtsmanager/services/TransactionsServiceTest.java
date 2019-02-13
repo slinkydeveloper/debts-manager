@@ -52,6 +52,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
   private TransactionDao transactionPersistence;
   private StatusDao statusPersistence;
   private TransactionsService transactionsService;
+  private StatusService statusService;
   private ReadModelManagerService readModelManagerService;
 
   private JWTAuth auth;
@@ -78,7 +79,8 @@ public class TransactionsServiceTest extends BaseServicesTest {
     userPersistence = UserDao.create(pgClient);
     transactionPersistence = TransactionDao.create(pgClient, readModelManagerService);
     statusPersistence = StatusDao.create(redisClient, pgClient, readModelManagerService);
-    transactionsService = TransactionsService.create(vertx, statusPersistence, transactionPersistence, userPersistence);
+    transactionsService = TransactionsService.create(transactionPersistence, userPersistence);
+    statusService = StatusService.create(vertx, statusPersistence);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
       auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(buf.toJsonObject()));
       usersService = UsersService.create(vertx, userPersistence, auth);
@@ -229,7 +231,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
 
   @Test
   public void getUserStatusEmpty(VertxTestContext test) throws InterruptedException {
-    transactionsService.getUserStatus(null, loggedContext, test.succeeding(res -> {
+    statusService.getUserStatus(null, loggedContext, test.succeeding(res -> {
         test.verify(() -> {
           assertJsonResponse(200, "OK", new JsonObject(), res);
         });
@@ -254,13 +256,13 @@ public class TransactionsServiceTest extends BaseServicesTest {
           FutureUtils.<OperationResponse>futurify(h -> transactionsService.createTransaction(new NewTransaction("francesco", +10, "test1"), slinkyLoggedContext, h))
         )
     ).setHandler(test.succeeding(cf -> {
-      transactionsService.getUserStatus(null, loggedContext, test.succeeding(opResponse -> {
+      statusService.getUserStatus(null, loggedContext, test.succeeding(opResponse -> {
         test.verify(() ->
           assertJsonResponse(200, "OK", new JsonObject().put("slinky", 10), opResponse)
         );
         statusFrancescoCheck.flag();
       }));
-      transactionsService.getUserStatus(null, slinkyLoggedContext, test.succeeding(opResponse -> {
+      statusService.getUserStatus(null, slinkyLoggedContext, test.succeeding(opResponse -> {
         test.verify(() ->
           assertJsonResponse(200, "OK", new JsonObject().put("francesco", -10), opResponse)
         );
@@ -291,8 +293,8 @@ public class TransactionsServiceTest extends BaseServicesTest {
     Future<OperationResponse> bootstrapTestFuture = FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"user\" (username, password) VALUES ($1, $2)", Tuple.of("slinky", "slinky"),  h))
       .compose(r -> FutureUtils.<PgRowSet>futurify(h -> pgClient.preparedQuery("INSERT INTO \"userrelationship\" (\"from\", \"to\") VALUES ($1, $2)", Tuple.of("francesco", "slinky"), h)))
       .compose(r -> CompositeFuture.all(
-        FutureUtils.<OperationResponse>futurify(h -> transactionsService.getUserStatus(null, loggedContext, h)),
-        FutureUtils.<OperationResponse>futurify(h -> transactionsService.getUserStatus(null, slinkyLoggedContext, h))
+        FutureUtils.<OperationResponse>futurify(h -> statusService.getUserStatus(null, loggedContext, h)),
+        FutureUtils.<OperationResponse>futurify(h -> statusService.getUserStatus(null, slinkyLoggedContext, h))
       ))
       .compose(r -> FutureUtils.<OperationResponse>futurify(h -> transactionsService.createTransaction(new NewTransaction("slinky", +20, "test"), loggedContext, h)))
       .compose(t -> FutureUtils.futurify(h -> transactionsService.updateTransaction(t.getPayload().toJsonObject().getString("id"), new UpdateTransaction(+10d, "newtest"), loggedContext, h)));

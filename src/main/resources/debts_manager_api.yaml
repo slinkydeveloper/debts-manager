@@ -136,7 +136,7 @@ paths:
           description: 'Expired token'
       security:
         - loggedUserToken: []
-      x-vertx-event-bus: transactions.debts_manager
+      x-vertx-event-bus: status.debts_manager
   /login:
     post:
       summary: Login
@@ -319,4 +319,5 @@ components:
   x-vertx-service-gen:
     transactions.debts_manager: TransactionsService
     users.debts_manager: UsersService
+    status.debts_manager: StatusService
     login.debts_manager: LoginService

@@ -1,6 +1,5 @@
 package io.slinkydeveloper.debtsmanager.services.impl;
 
-import io.slinkydeveloper.debtsmanager.dao.StatusDao;
 import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
 import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
@@ -10,23 +9,16 @@ import io.slinkydeveloper.debtsmanager.services.TransactionsService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.api.OperationRequest;
 import io.vertx.ext.web.api.OperationResponse;
 
-import java.time.ZonedDateTime;
-
 public class TransactionsServiceImpl implements TransactionsService {
 
-  private final Vertx vertx;
-  private final StatusDao statusPersistence;
   private final TransactionDao transactionPersistence;
   private final UserDao userPersistence;
 
-  public TransactionsServiceImpl(Vertx vertx, StatusDao statusPersistence, TransactionDao transactionPersistence, UserDao userPersistence) {
-    this.vertx = vertx;
-    this.statusPersistence = statusPersistence;
+  public TransactionsServiceImpl(TransactionDao transactionPersistence, UserDao userPersistence) {
     this.transactionPersistence = transactionPersistence;
     this.userPersistence = userPersistence;
   }
@@ -100,18 +92,6 @@ public class TransactionsServiceImpl implements TransactionsService {
         resultHandler.handle(Future.succeededFuture(new OperationResponse().setStatusCode(200).setStatusMessage("OK")));
       });
     });
-  }
-
-  @Override
-  public void getUserStatus(String till, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler){
-    if (till == null)
-      statusPersistence
-        .getStatus(context.getUser().getString("username"))
-        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, ServiceUtils::buildJsonFromStatusMap));
-    else
-      statusPersistence
-        .getStatusTill(context.getUser().getString("username"), ZonedDateTime.parse(till))
-        .setHandler(ServiceUtils.sendRetrievedObjectHandler(resultHandler, ServiceUtils::buildJsonFromStatusMap));
   }
 
 }
