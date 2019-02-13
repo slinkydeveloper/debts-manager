@@ -1,8 +1,8 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.*;
-import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
+import io.slinkydeveloper.debtsmanager.persistence.UserDao;
 import io.vertx.core.Vertx;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;

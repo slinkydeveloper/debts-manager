@@ -1,6 +1,6 @@
 package io.slinkydeveloper.debtsmanager.services;
 
-import io.slinkydeveloper.debtsmanager.dao.StatusDao;
+import io.slinkydeveloper.debtsmanager.persistence.StatusRetriever;
 import io.slinkydeveloper.debtsmanager.services.impl.StatusServiceImpl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -12,8 +12,8 @@ import io.vertx.ext.web.api.generator.WebApiServiceGen;
 @WebApiServiceGen
 public interface StatusService {
 
-  static StatusService create(Vertx vertx, StatusDao statusDao) {
-    return new StatusServiceImpl(vertx, statusDao);
+  static StatusService create(Vertx vertx, StatusRetriever statusRetriever) {
+    return new StatusServiceImpl(vertx, statusRetriever);
   }
 
   void getUserStatus(String till, OperationRequest context, Handler<AsyncResult<OperationResponse>> resultHandler);

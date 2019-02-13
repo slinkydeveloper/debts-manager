@@ -1,4 +1,4 @@
-package io.slinkydeveloper.debtsmanager.dao.impl;
+package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.Row;
 import io.slinkydeveloper.debtsmanager.models.Transaction;

@@ -1,10 +1,10 @@
-package io.slinkydeveloper.debtsmanager.dao;
+package io.slinkydeveloper.debtsmanager.persistence;
 
 import io.reactiverse.pgclient.PgPool;
-import io.slinkydeveloper.debtsmanager.dao.impl.TransactionDaoImpl;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
+import io.slinkydeveloper.debtsmanager.persistence.impl.TransactionDaoImpl;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.vertx.core.Future;
 

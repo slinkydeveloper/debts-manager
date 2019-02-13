@@ -1,8 +1,8 @@
-package io.slinkydeveloper.debtsmanager.dao;
+package io.slinkydeveloper.debtsmanager.persistence;
 
 import io.reactiverse.pgclient.PgPool;
-import io.slinkydeveloper.debtsmanager.dao.impl.UserDaoImpl;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
+import io.slinkydeveloper.debtsmanager.persistence.impl.UserDaoImpl;
 import io.vertx.core.Future;
 
 import java.util.List;

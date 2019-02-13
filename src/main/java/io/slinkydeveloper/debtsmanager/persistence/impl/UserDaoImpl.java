@@ -1,10 +1,10 @@
-package io.slinkydeveloper.debtsmanager.dao.impl;
+package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgRowSet;
 import io.reactiverse.pgclient.Tuple;
-import io.slinkydeveloper.debtsmanager.dao.UserDao;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
+import io.slinkydeveloper.debtsmanager.persistence.UserDao;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;

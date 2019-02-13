@@ -1,9 +1,9 @@
-package io.slinkydeveloper.debtsmanager.dao.impl;
+package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgResult;
 import io.reactiverse.pgclient.Tuple;
-import io.slinkydeveloper.debtsmanager.dao.StatusDao;
+import io.slinkydeveloper.debtsmanager.persistence.StatusRetriever;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
@@ -23,17 +23,17 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
 
-import static io.slinkydeveloper.debtsmanager.dao.impl.DaoUtils.statusCollector;
+import static io.slinkydeveloper.debtsmanager.persistence.impl.DaoUtils.statusCollector;
 
-public class StatusDaoImpl implements StatusDao {
+public class StatusRetrieverImpl implements StatusRetriever {
 
   private static String buildStatusQuery;
   private static String buildStatusBeforeQuery;
 
   static {
     try {
-      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusDaoImpl.class.getClassLoader().getResource("sql/build_status_query.sql").toURI())));
-      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusDaoImpl.class.getClassLoader().getResource("sql/build_status_before_query.sql").toURI())));
+      buildStatusQuery = String.join("\n", Files.readAllLines(Paths.get(StatusRetrieverImpl.class.getClassLoader().getResource("sql/build_status_query.sql").toURI())));
+      buildStatusBeforeQuery = String.join("\n", Files.readAllLines(Paths.get(StatusRetrieverImpl.class.getClassLoader().getResource("sql/build_status_before_query.sql").toURI())));
     } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
     }
@@ -44,12 +44,12 @@ public class StatusDaoImpl implements StatusDao {
 
   private final ReadModelManagerService readModelManager;
 
-  private final static Logger log = LoggerFactory.getLogger(StatusDaoImpl.class);
+  private final static Logger log = LoggerFactory.getLogger(StatusRetrieverImpl.class);
   private final static Handler<AsyncResult<Boolean>> READ_MODEL_MANAGER_RESULT_HANDLER = ar -> {
     if (ar.failed()) log.warn("Unable to update read model", ar.cause());
   };
 
-  public StatusDaoImpl(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
+  public StatusRetrieverImpl(RedisClient redisClient, PgPool pgClient, ReadModelManagerService readModelManager) {
     this.redisClient = redisClient;
     this.pgClient = pgClient;
     this.readModelManager = readModelManager;

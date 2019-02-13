@@ -3,9 +3,9 @@ package io.slinkydeveloper.debtsmanager;
 import io.reactiverse.pgclient.PgClient;
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgPoolOptions;
-import io.slinkydeveloper.debtsmanager.dao.StatusDao;
-import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
-import io.slinkydeveloper.debtsmanager.dao.UserDao;
+import io.slinkydeveloper.debtsmanager.persistence.StatusRetriever;
+import io.slinkydeveloper.debtsmanager.persistence.TransactionDao;
+import io.slinkydeveloper.debtsmanager.persistence.UserDao;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.services.StatusService;
 import io.slinkydeveloper.debtsmanager.services.TransactionsService;
@@ -106,14 +106,14 @@ public class MainVerticle extends AbstractVerticle {
         ReadModelManagerService readModelManagerProxy = ReadModelManagerService.createClient(vertx, "read_model_manager.debts_manager", readModelManagerCircuitBreaker);
         UserDao userDao = UserDao.create(pgClient);
         TransactionDao transactionDao = TransactionDao.create(pgClient, readModelManagerProxy);
-        StatusDao statusDao = StatusDao.create(
+        StatusRetriever statusRetriever = StatusRetriever.create(
           redisClient,
           pgClient,
           readModelManagerProxy
         );
         JsonObject jwkObject = ar.result().toJsonObject();
         JWTAuth auth = JWTAuth.create(vertx, new JWTAuthOptions().addJwk(jwkObject));
-        startServices(userDao, transactionDao, statusDao, redisClient, auth);
+        startServices(userDao, transactionDao, statusRetriever, redisClient, auth);
         startHttpServer(auth).setHandler(future.completer());
       }
     });
@@ -130,11 +130,13 @@ public class MainVerticle extends AbstractVerticle {
 
   private Future<Buffer> loadResource(String path) {
     Future<Buffer> fut = Future.future();
+    // if path is relative readFile() tries to load both from CWD or, if it cannot find nothing, from classpath root
+    // "When vert.x cannot find the file on the filesystem it tries to resolve the file from the class path"
     vertx.fileSystem().readFile(path, fut.completer());
     return fut;
   }
 
-  private void startServices(UserDao userDao, TransactionDao transactionDao, StatusDao statusDao, RedisClient redisClient, JWTAuth auth) {
+  private void startServices(UserDao userDao, TransactionDao transactionDao, StatusRetriever statusRetriever, RedisClient redisClient, JWTAuth auth) {
     serviceBinder = new ServiceBinder(vertx);
 
     registeredConsumers = new ArrayList<>();
@@ -151,7 +153,7 @@ public class MainVerticle extends AbstractVerticle {
         .setAddress("users.debts_manager")
         .register(UsersService.class, usersService)
     );
-    StatusService statusService = StatusService.create(vertx, statusDao);
+    StatusService statusService = StatusService.create(vertx, statusRetriever);
     registeredConsumers.add(
       serviceBinder
         .setAddress("status.debts_manager")

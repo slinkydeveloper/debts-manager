@@ -1,12 +1,12 @@
-package io.slinkydeveloper.debtsmanager.dao.impl;
+package io.slinkydeveloper.debtsmanager.persistence.impl;
 
 import io.reactiverse.pgclient.PgPool;
 import io.reactiverse.pgclient.PgResult;
 import io.reactiverse.pgclient.Tuple;
-import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
+import io.slinkydeveloper.debtsmanager.persistence.TransactionDao;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionCreationCommand;
 import io.slinkydeveloper.debtsmanager.readmodel.command.UpdateStatusAfterTransactionUpdateCommand;
@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.slinkydeveloper.debtsmanager.dao.impl.DaoUtils.transactionCollector;
+import static io.slinkydeveloper.debtsmanager.persistence.impl.DaoUtils.transactionCollector;
 
 public class TransactionDaoImpl implements TransactionDao {
 

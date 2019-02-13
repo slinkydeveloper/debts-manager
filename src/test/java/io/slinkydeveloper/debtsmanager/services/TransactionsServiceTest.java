@@ -1,14 +1,14 @@
 package io.slinkydeveloper.debtsmanager.services;
 
 import io.reactiverse.pgclient.*;
-import io.slinkydeveloper.debtsmanager.dao.StatusDao;
-import io.slinkydeveloper.debtsmanager.dao.TransactionDao;
-import io.slinkydeveloper.debtsmanager.dao.UserDao;
-import io.slinkydeveloper.debtsmanager.dao.impl.DaoUtils;
 import io.slinkydeveloper.debtsmanager.models.AuthCredentials;
 import io.slinkydeveloper.debtsmanager.models.NewTransaction;
 import io.slinkydeveloper.debtsmanager.models.Transaction;
 import io.slinkydeveloper.debtsmanager.models.UpdateTransaction;
+import io.slinkydeveloper.debtsmanager.persistence.StatusRetriever;
+import io.slinkydeveloper.debtsmanager.persistence.TransactionDao;
+import io.slinkydeveloper.debtsmanager.persistence.UserDao;
+import io.slinkydeveloper.debtsmanager.persistence.impl.DaoUtils;
 import io.slinkydeveloper.debtsmanager.readmodel.ReadModelManagerService;
 import io.slinkydeveloper.debtsmanager.readmodel.command.PushNewStatusCommand;
 import io.slinkydeveloper.debtsmanager.utils.FutureUtils;
@@ -50,7 +50,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
   private RedisClient redisClient;
   private UserDao userDao;
   private TransactionDao transactionDao;
-  private StatusDao statusDao;
+  private StatusRetriever statusDao;
   private TransactionsService transactionsService;
   private StatusService statusService;
   private ReadModelManagerService readModelManagerService;
@@ -78,7 +78,7 @@ public class TransactionsServiceTest extends BaseServicesTest {
     readModelManagerService = ReadModelManagerService.create(redisClient);
     userDao = UserDao.create(pgClient);
     transactionDao = TransactionDao.create(pgClient, readModelManagerService);
-    statusDao = StatusDao.create(redisClient, pgClient, readModelManagerService);
+    statusDao = StatusRetriever.create(redisClient, pgClient, readModelManagerService);
     transactionsService = TransactionsService.create(transactionDao, userDao);
     statusService = StatusService.create(vertx, statusDao);
     vertx.fileSystem().readFile("jwk.json", testContext.succeeding(buf -> {
