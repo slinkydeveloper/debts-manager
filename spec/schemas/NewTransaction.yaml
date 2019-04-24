@@ -1,0 +1,10 @@
+allOf:
+  - properties:
+      to:
+        $ref: 'Username.yaml'
+    required:
+      - to
+      - description
+      - value
+    type: object
+  - $ref: 'UpdateTransaction.yaml'

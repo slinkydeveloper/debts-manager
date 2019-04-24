@@ -15,3 +15,4 @@ mnvw
 mvnw.cmd
 .mvn
 jwk.json
+package-lock.json

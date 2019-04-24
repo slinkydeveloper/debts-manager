@@ -24,7 +24,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Transaction'
+                  $ref: 'schemas/Transaction.yaml'
         '401':
           description: 'Expired token'
       security:
@@ -39,7 +39,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTransaction'
+              $ref: 'schemas/NewTransaction.yaml'
         required: true
       responses:
         '201':
@@ -64,7 +64,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Transaction'
+                $ref: 'schemas/Transaction.yaml'
         '401':
           description: 'Expired Token'
         '403':
@@ -81,7 +81,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateTransaction'
+              $ref: 'schemas/UpdateTransaction.yaml'
         required: true
       responses:
         '202':
@@ -131,7 +131,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Status'
+                $ref: 'schemas/Status.yaml'
         '401':
           description: 'Expired token'
       security:
@@ -152,7 +152,7 @@ paths:
               type: object
               properties:
                 username:
-                  $ref: '#/components/schemas/Username'
+                  $ref: 'schemas/Username.yaml'
                 password:
                   type: string
         required: true
@@ -179,7 +179,7 @@ paths:
               type: object
               properties:
                 username:
-                  $ref: '#/components/schemas/Username'
+                  $ref: 'schemas/Username.yaml'
                 password:
                   type: string
         required: true
@@ -209,11 +209,11 @@ paths:
                   allowedTo:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Username'
+                      $ref: 'schemas/Username.yaml'
                   allowedFrom:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Username'
+                      $ref: 'schemas/Username.yaml'
         '401':
           description: 'Expired token'
       security:
@@ -231,7 +231,7 @@ paths:
           required: true
           in: path
           schema:
-            $ref: '#/components/schemas/Username'
+            $ref: 'schemas/Username.yaml'
       responses:
         '201':
           description: 'User connected'
@@ -257,61 +257,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Username'
+                  $ref: 'schemas/Username.yaml'
         '401':
           description: 'Expired token'
       security:
         - loggedUserToken: []
       x-vertx-event-bus: users.debts_manager
 components:
-  schemas:
-    Username:
-      minLength: 5
-      type: string
-    NewTransaction:
-      allOf:
-        - properties:
-            to:
-              $ref: '#/components/schemas/Username'
-          required:
-            - to
-            - description
-            - value
-          type: object
-        - $ref: '#/components/schemas/UpdateTransaction'
-    UpdateTransaction:
-      type: object
-      properties:
-        value:
-          type: number
-        description:
-          minLength: 1
-          type: string
-    Transaction:
-      allOf:
-        - $ref: '#/components/schemas/NewTransaction'
-        - required:
-            - from
-            - to
-            - id
-            - description
-            - value
-            - at
-          type: object
-          properties:
-            from:
-              $ref: '#/components/schemas/Username'
-            id:
-              type: string
-            at:
-              description: "Insertion datetime"
-              format: date-time
-              type: string
-    Status:
-      description: 'Map with users id as keys and debt as value'
-      type: object
-      additionalProperties:
-        type: number
   securitySchemes:
     loggedUserToken:
       type: http

@@ -1,0 +1,19 @@
+allOf:
+  - $ref: 'NewTransaction.yaml'
+  - required:
+      - from
+      - to
+      - id
+      - description
+      - value
+      - at
+    type: object
+    properties:
+      from:
+        $ref: 'Username.yaml'
+      id:
+        type: string
+      at:
+        description: "Insertion datetime"
+        format: date-time
+        type: string

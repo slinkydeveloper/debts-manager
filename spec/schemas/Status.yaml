@@ -1,0 +1,4 @@
+description: 'Map with users id as keys and debt as value'
+type: object
+additionalProperties:
+  type: number

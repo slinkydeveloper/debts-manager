@@ -1,0 +1,17 @@
+{
+  "name": "debts-manager-api-spec",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "speccy lint -s operation-tags debts_manager_api.yaml",
+    "build": "swagger-cli bundle -o ../src/main/resources/debts_manager_api.json -r debts_manager_api.yaml"
+  },
+  "author": "Francesco Guardiani",
+  "license": "ISC",
+  "dependencies": {
+    "speccy": "^0.9.0",
+    "swagger-cli": "^2.2.1"
+  }
+}

@@ -46,7 +46,7 @@ public class MainVerticle extends AbstractVerticle {
    */
   private Future<Void> startHttpServer(JWTAuth auth) {
     Future<Void> future = Future.future();
-    OpenAPI3RouterFactory.create(this.vertx, "debts_manager_api.yaml", openAPI3RouterFactoryAsyncResult -> {
+    OpenAPI3RouterFactory.create(this.vertx, "debts_manager_api.json", openAPI3RouterFactoryAsyncResult -> {
       if (openAPI3RouterFactoryAsyncResult.succeeded()) {
         OpenAPI3RouterFactory routerFactory = openAPI3RouterFactoryAsyncResult.result();
 

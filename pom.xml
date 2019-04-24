@@ -137,6 +137,37 @@
           <target>11</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.github.mjeanroy</groupId>
+        <artifactId>node-maven-plugin</artifactId>
+        <version>0.2.0</version>
+        <executions>
+          <execution>
+            <id>check-and-install-npm</id>
+            <goals>
+              <goal>check</goal>
+              <goal>install</goal>
+            </goals>
+          </execution>
+<!--          <execution>
+            <id>lint-spec</id>
+            <phase>process-sources</phase>
+            <goals>
+              <goal>lint</goal>
+            </goals>
+          </execution>-->
+          <execution>
+            <id>build-spec</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <workingDirectory>${project.basedir}/spec</workingDirectory>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>

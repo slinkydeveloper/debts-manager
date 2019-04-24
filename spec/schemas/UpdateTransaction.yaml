@@ -1,0 +1,7 @@
+type: object
+properties:
+  value:
+    type: number
+  description:
+    minLength: 1
+    type: string
